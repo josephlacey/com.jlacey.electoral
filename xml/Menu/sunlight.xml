@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/admin/sunlight</path>
+    <page_callback>CRM_Sunlight_Page_Sunlight</page_callback>
+    <title>Sunlight</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>
