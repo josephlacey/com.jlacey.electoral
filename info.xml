@@ -9,9 +9,9 @@
     <email>joseph@palantetech.coop</email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">http://FIXME</url>
-    <url desc="Documentation">http://FIXME</url>
-    <url desc="Support">http://FIXME</url>
+    <url desc="Main Extension Page">http://git.palantetech.coop/palante/civicrm/extensions/coop.palantetech.sunlight/</url>
+    <url desc="Documentation">https://hq.palantetech.coop/projects/sunlight/wiki</url>
+    <url desc="Support">https://hq.palantetech.coop/projects/sunlight/issuesi/new</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2015-03-02</releaseDate>
@@ -19,6 +19,7 @@
   <develStage>alpha</develStage>
   <compatibility>
     <ver>4.5</ver>
+    <ver>4.6</ver>
   </compatibility>
   <comments>This modules provide integration to the Sunlight Foundation API</comments>
   <civix>
