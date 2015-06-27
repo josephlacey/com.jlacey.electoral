@@ -11,7 +11,6 @@
  */ 
 function civicrm_api3_congress_legs($params) {
 
-  //FIXME Move this choice to the Admin UI
   sunlight_congress_legs('senate');
   sunlight_congress_legs('house');
   
@@ -21,9 +20,7 @@ function civicrm_api3_congress_legs($params) {
 
 function sunlight_congress_legs($chamber) {
 
-  //FIXME Update API key to CCR specific one
-  //FIXME Admin UI field?
-  $apikey = 'fd2e8ef1c3554b7ebf030670e34e3763';
+  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
 
   //Assemble the API URL
   $url = "https://congress.api.sunlightfoundation.com/legislators?apikey=$apikey&in_office=true&per_page=all&chamber=$chamber";
@@ -65,6 +62,7 @@ function sunlight_congress_legs($chamber) {
     //Create or update the CiviCRM Contact
     $leg_first_name = $legislator['first_name'];
     $leg_last_name = $legislator['last_name'];
+    $leg_state = array_search($legislator['state'], $states);
     $leg_chamber = $legislator['chamber'];
     switch ($leg_chamber) {
       case 'senate':
@@ -74,7 +72,6 @@ function sunlight_congress_legs($chamber) {
         $leg_chamber = 'lower';
         break;
     }
-    $leg_state = array_search($legislator['state'], $states);
     $leg_district = $legislator['district'];
 
     $leg_contact_params = array(
@@ -106,8 +103,8 @@ function sunlight_congress_legs($chamber) {
     $leg_details_update = civicrm_api3('CustomValue', 'create', array(
       'entity_id' => $cid,
       'custom_Representative_Details:Level' => 'congress',
-      'custom_Representative_Details:Chamber' => "$leg_chamber",
       'custom_Representative_Details:State' => "$leg_state",
+      'custom_Representative_Details:Chamber' => "$leg_chamber",
       'custom_Representative_Details:District' => "$leg_district",
       'custom_Representative_Details:In office?' => 1,
     ));
@@ -150,23 +147,20 @@ function sunlight_congress_legs($chamber) {
 
 function civicrm_api3_congress_districts($params) {
 
-  if (is_numeric($params['limit'])) {
-    sunlight_congress_districts($params['limit']);
-
-    return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Districts successful."));
-
+  $limit = '';
+  if (isset($params['limit']) && is_numeric($params['limit'])) {
+    $limit = $params['limit'];
   } else {
-
     return civicrm_api3_create_error(array(1), array("Sunlight Foundation Congress API - Districts limit is not an integer."));
   }
+  sunlight_congress_districts($params['limit']);
+  return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Districts successful."));
 
 }
 
 function sunlight_congress_districts($limit) {
 
-  //FIXME Update API key to CCR specific one
-  //FIXME Admin UI field?
-  $apikey = 'fd2e8ef1c3554b7ebf030670e34e3763';
+  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
 
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
 
@@ -177,8 +171,10 @@ function sunlight_congress_districts($limit) {
   //the default address type?  Or should there be an address flag that is checked?
   $contact_addresses = civicrm_api3('Address', 'get', array(
     'return' => "contact_id,geo_code_1,geo_code_2",
-    'contact_id' => array('IS NOT NULL' => 1),
+    //'contact_id' => array('IS NOT NULL' => 1),
+    'contact_id' => 202,
     'location_type_id' => 1,
+    'country_id' => 1228,
     'geo_code_1' => array('IS NOT NULL' => 1),
     'geo_code_2' => array('IS NOT NULL' => 1),
     'options' => array('limit' => $limit),
@@ -209,6 +205,7 @@ function sunlight_congress_districts($limit) {
       //FIXME this doesn't update an existing entry on a multi-value custom data set
       $contact_rep_details_update = civicrm_api3('CustomValue', 'create', array(
         'entity_id' => $contact_id,
+        'custom_Representative_Details:Level' => 'congress',
         'custom_Representative_Details:State' => "$contact_state",
         'custom_Representative_Details:District' => "$contact_district",
       ));

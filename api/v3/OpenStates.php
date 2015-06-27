@@ -11,20 +11,20 @@
  */ 
 function civicrm_api3_open_states_reps($params) {
 
-  //sunlight_open_states_reps('upper', 'NY');
-  //sunlight_open_states_reps('lower', 'NY');
-  //sunlight_open_states_reps('upper', 'CA');
-  //sunlight_open_states_reps('lower', 'CA');
+  $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
+  dsm($open_states);
+  foreach ($open_states as $state_id) {
+    $state_abbr = CRM_Core_PseudoConstant::stateProvinceAbbreviation($state_id);
+    sunlight_open_states_reps('upper', "$state_abbr");
+    sunlight_open_states_reps('lower', "$state_abbr");
+  }
   
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Representatives successful."));
-
 }
 
 function sunlight_open_states_reps($chamber, $state = NULL) {
 
-  //FIXME Update API key to CCR specific one
-  //FIXME Admin UI field?
-  $apikey = 'fd2e8ef1c3554b7ebf030670e34e3763';
+  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
 
   //Assemble the API URL
   $url = "http://openstates.org/api/v1/legislators/?apikey=$apikey&active=true&per_page=all&chamber=$chamber";
@@ -70,8 +70,8 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
     //Create the CiviCRM Contact
     $rep_first_name = $rep['first_name'];
     $rep_last_name = $rep['last_name'];
-    $rep_chamber = $rep['chamber'];
     $rep_state = array_search(strtoupper($rep['state']), $states);
+    $rep_chamber = $rep['chamber'];
     $rep_district = $rep['district'];
 
     $rep_contact_params = array(
@@ -102,8 +102,8 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
     $rep_details_update = civicrm_api3('CustomValue', 'create', array(
       'entity_id' => $cid,
       'custom_Representative_Details:Level' => 'openstates',
-      'custom_Representative_Details:Chamber' => "$rep_chamber",
       'custom_Representative_Details:State' => "$rep_state",
+      'custom_Representative_Details:Chamber' => "$rep_chamber",
       'custom_Representative_Details:District' => "$rep_district",
       'custom_Representative_Details:In office?' => 1,
     ));
@@ -149,8 +149,80 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
 
 function civicrm_api3_open_states_districts($params) {
 
-  dsm($params);
+  $limit = '';
+  if (isset($params['limit']) && is_numeric($params['limit'])) {
+    $limit = $params['limit'];
+  } else {
+    return civicrm_api3_create_error(array(1), array("Sunlight Foundation Open States API - Districts limit is not an integer."));
+  }
+
+  //FIXME This should be pulled from admin setting
+  $states = array(
+    //1004 => 'CA',
+    1031 => 'NY',
+  );
+
+  foreach ($states as $state_province_id => $state) {
+    sunlight_open_states_districts($params['limit'], $state_province_id);
+  }
+
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Districts successful."));
 
 }
 
+function sunlight_open_states_districts($limit, $state_province_id) {
+
+  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
+
+  //geo_code1 = latitude
+  //geo_code2 = longitude
+  //FIXME this assumes the Home location type because we're assuming that's where folks are registered
+  //this obviously assumes a certain data model.  Should this assume the primary address?  
+  //the default address type?  Or should there be an address flag that is checked?
+  $contact_addresses = civicrm_api3('Address', 'get', array(
+    'return' => "contact_id,geo_code_1,geo_code_2",
+    'contact_id' => array('IS NOT NULL' => 1),
+    'location_type_id' => 1,
+    'state_province_id' => "$state_province_id",
+    'country_id' => 1228,
+    'geo_code_1' => array('IS NOT NULL' => 1),
+    'geo_code_2' => array('IS NOT NULL' => 1),
+    'options' => array('limit' => $limit),
+  ));
+
+  foreach($contact_addresses['values'] as $address) {
+    //CRM_Core_Error::debug_var('address', $address);
+
+    $latitude = $longitude = $districts = $contact_id = '';
+    
+    $latitude = $address['geo_code_1'];
+    $longitude = $address['geo_code_2'];
+
+    //Assemble the API URL
+    $url = "http://openstates.org/api/v1/legislators/geo/?apikey=$apikey&lat=$latitude&long=$longitude";
+    //CRM_Core_Error::debug_var('url', $url);
+
+    //Get results from API and decode the JSON
+    $districts = json_decode(file_get_contents($url), TRUE);
+    //CRM_Core_Error::debug_var('districts', $districts);
+
+    dsm($districts);
+    /*
+    if( $districts['count'] == 1 ) {
+      $contact_id = $address['contact_id'];
+      $contact_district = $districts['results'][0]['district'];
+      $contact_chamber = $rep['chamber'];
+
+      //Update the CiviCRM Contact
+      //FIXME this doesn't update an existing entry on a multi-value custom data set
+      $contact_rep_details_update = civicrm_api3('CustomValue', 'create', array(
+        'entity_id' => $contact_id,
+        'custom_Representative_Details:Level' => 'openstates',
+        'custom_Representative_Details:State' => "$state_province_id",
+        'custom_Representative_Details:Chamber' => "$contact_chamber",
+        'custom_Representative_Details:District' => "$contact_district",
+      ));
+    }
+    */
+  }
+}
