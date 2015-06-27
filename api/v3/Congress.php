@@ -27,7 +27,6 @@ function sunlight_congress_legs($chamber) {
 
   //Get results from API and decode the JSON
   $legislators = json_decode(file_get_contents($url), TRUE);
-  //CRM_Core_Error::debug_var('legislators', $legislators);
 
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
   $leg_count = 0;
@@ -41,23 +40,19 @@ function sunlight_congress_legs($chamber) {
     $leg_contact_params = $leg_contact = '';
     $leg_email_params = $leg_email = $leg_email_exist = $leg_email_exist_id = '';
 
-    //CRM_Core_Error::debug_var('legislator', $legislator);
 
     //Use the Sunlight Bio Guide ID as the external ID
     //and find if legislator exists already.
     $leg_id = $legislator['bioguide_id'];
-    //CRM_Core_Error::debug_var('leg_id', $leg_id);
 
     $civicrm_contact_id = civicrm_api3('Contact', 'get', array(
       'return' => 'id',
       'external_identifier' => "$leg_id",
     ));
-    //CRM_Core_Error::debug_var('civicrm_contact_id', $civicrm_contact_id);
 
     if ( $civicrm_contact_id['count'] == 1 ) {
       $cid = $civicrm_contact_id['id'];
     }
-    //CRM_Core_Error::debug_var('cid', $cid);
 
     //Create or update the CiviCRM Contact
     $leg_first_name = $legislator['first_name'];
@@ -85,10 +80,8 @@ function sunlight_congress_legs($chamber) {
     if ( $cid != '' ) {
       $leg_contact_params['id'] = $cid;
     }
-    //CRM_Core_Error::debug_var('leg_contact_params', $leg_contact_params);
 
     $leg_contact = civicrm_api3('Contact', 'create', $leg_contact_params);
-    //CRM_Core_Error::debug_var('leg_contact', $leg_contact);
 
     //Repeating the Contact ID set in case this is a contact creation
     //and it's not set above.
@@ -117,7 +110,6 @@ function sunlight_congress_legs($chamber) {
       'is_primary' => 1,
       'location_type_id' => 3,
     ));
-    //CRM_Core_Error::debug_var('leg_email_exist', $leg_email_exist);
 
     //If there is an existing email address, set the id for comparison
     if ($leg_email_exist['count'] > 0) {
@@ -138,7 +130,6 @@ function sunlight_congress_legs($chamber) {
         );
       
         $leg_email = civicrm_api3('Email', 'create', $leg_email_params);
-        //CRM_Core_Error::debug_var('leg_email', $leg_email);
       }
     }
   }
@@ -181,7 +172,6 @@ function sunlight_congress_districts($limit) {
   ));
 
   foreach($contact_addresses['values'] as $address) {
-    //CRM_Core_Error::debug_var('address', $address);
 
     $latitude = $longitude = $districts = $contact_id = '';
     
@@ -190,11 +180,9 @@ function sunlight_congress_districts($limit) {
 
     //Assemble the API URL
     $url = "https://congress.api.sunlightfoundation.com/districts/locate?apikey=$apikey&latitude=$latitude&longitude=$longitude";
-    //CRM_Core_Error::debug_var('url', $url);
 
     //Get results from API and decode the JSON
     $districts = json_decode(file_get_contents($url), TRUE);
-    //CRM_Core_Error::debug_var('districts', $districts);
 
     if( $districts['count'] == 1 ) {
       $contact_id = $address['contact_id'];

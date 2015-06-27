@@ -12,7 +12,6 @@
 function civicrm_api3_open_states_reps($params) {
 
   $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
-  dsm($open_states);
   foreach ($open_states as $state_id) {
     $state_abbr = CRM_Core_PseudoConstant::stateProvinceAbbreviation($state_id);
     sunlight_open_states_reps('upper', "$state_abbr");
@@ -34,12 +33,10 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
 
   //Get results from API and decode the JSON
   $reps = json_decode(file_get_contents($url), TRUE);
-  //CRM_Core_Error::debug_var('reps', $reps);
 
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
 
   $rep_count = 0;
-
   foreach( $reps as $rep ) {
 
     $rep_count++;
@@ -49,23 +46,18 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
     $rep_contact_params = $rep_contact = '';
     $rep_email_params = $rep_email = $rep_email_exist = $rep_email_exist_id = '';
 
-    //CRM_Core_Error::debug_var('rep', $rep);
-
     //Use the Sunlight Leg ID as the external ID
     //and find if representative exists already.
     $rep_id = $rep['leg_id'];
-    //CRM_Core_Error::debug_var('rep_id', $rep_id);
 
     $civicrm_contact_id = civicrm_api3('Contact', 'get', array(
       'return' => 'id',
       'external_identifier' => "$rep_id",
     ));
-    //CRM_Core_Error::debug_var('civicrm_contact_id', $civicrm_contact_id);
 
     if ($civicrm_contact_id['count'] == 1 ) {
       $cid = $civicrm_contact_id['id'];
     }
-    //CRM_Core_Error::debug_var('cid', $cid);
 
     //Create the CiviCRM Contact
     $rep_first_name = $rep['first_name'];
@@ -84,10 +76,8 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
     if ($cid != '') {
       $rep_contact_params['id'] = $cid;
     }
-    //CRM_Core_Error::debug_var('rep_contact_params', $rep_contact_params);
 
     $rep_contact = civicrm_api3('Contact', 'create', $rep_contact_params);
-    //CRM_Core_Error::debug_var('rep_contact', $rep_contact);
 
     //Repeating the Contact ID set in case this is a contact creation
     //and it's not set above.
@@ -110,7 +100,6 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
 
     //Create the Email address
     if ($rep['email'] != '') {
-      //CRM_Core_Error::debug_var('cid', $cid);
   
       $rep_email = $rep['email'];
       //Check if contact has an email addres set, Main location type
@@ -120,7 +109,6 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
         'is_primary' => 1,
         'location_type_id' => 3,
       ));
-      //CRM_Core_Error::debug_var('rep_email_exist', $rep_email_exist);
   
       //If there is an existing email address,
       //set the id and the Sunlight email address for comparison
@@ -140,7 +128,6 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
         );
   
         $rep_email = civicrm_api3('Email', 'create', $rep_email_params);
-        //CRM_Core_Error::debug_var('rep_email', $rep_email);
       }
     }
   }
@@ -156,21 +143,16 @@ function civicrm_api3_open_states_districts($params) {
     return civicrm_api3_create_error(array(1), array("Sunlight Foundation Open States API - Districts limit is not an integer."));
   }
 
-  //FIXME This should be pulled from admin setting
-  $states = array(
-    //1004 => 'CA',
-    1031 => 'NY',
-  );
-
-  foreach ($states as $state_province_id => $state) {
-    sunlight_open_states_districts($params['limit'], $state_province_id);
+  $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
+  foreach ($open_states as $state_id) {
+    sunlight_open_states_districts($params['limit'], $state_id);
   }
 
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Districts successful."));
 
 }
 
-function sunlight_open_states_districts($limit, $state_province_id) {
+function sunlight_open_states_districts($limit, $state_id) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
 
@@ -183,7 +165,7 @@ function sunlight_open_states_districts($limit, $state_province_id) {
     'return' => "contact_id,geo_code_1,geo_code_2",
     'contact_id' => array('IS NOT NULL' => 1),
     'location_type_id' => 1,
-    'state_province_id' => "$state_province_id",
+    'state_province_id' => "$state_id",
     'country_id' => 1228,
     'geo_code_1' => array('IS NOT NULL' => 1),
     'geo_code_2' => array('IS NOT NULL' => 1),
@@ -191,7 +173,6 @@ function sunlight_open_states_districts($limit, $state_province_id) {
   ));
 
   foreach($contact_addresses['values'] as $address) {
-    //CRM_Core_Error::debug_var('address', $address);
 
     $latitude = $longitude = $districts = $contact_id = '';
     
@@ -200,29 +181,24 @@ function sunlight_open_states_districts($limit, $state_province_id) {
 
     //Assemble the API URL
     $url = "http://openstates.org/api/v1/legislators/geo/?apikey=$apikey&lat=$latitude&long=$longitude";
-    //CRM_Core_Error::debug_var('url', $url);
 
     //Get results from API and decode the JSON
     $districts = json_decode(file_get_contents($url), TRUE);
-    //CRM_Core_Error::debug_var('districts', $districts);
 
-    dsm($districts);
-    /*
-    if( $districts['count'] == 1 ) {
+    foreach ( $districts as $district ) {
       $contact_id = $address['contact_id'];
-      $contact_district = $districts['results'][0]['district'];
-      $contact_chamber = $rep['chamber'];
+      $contact_district = $district['district'];
+      $contact_chamber = $district['chamber'];
 
       //Update the CiviCRM Contact
       //FIXME this doesn't update an existing entry on a multi-value custom data set
       $contact_rep_details_update = civicrm_api3('CustomValue', 'create', array(
         'entity_id' => $contact_id,
         'custom_Representative_Details:Level' => 'openstates',
-        'custom_Representative_Details:State' => "$state_province_id",
+        'custom_Representative_Details:State' => "$state_id",
         'custom_Representative_Details:Chamber' => "$contact_chamber",
         'custom_Representative_Details:District' => "$contact_district",
       ));
     }
-    */
   }
 }

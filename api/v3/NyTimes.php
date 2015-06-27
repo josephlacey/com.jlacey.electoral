@@ -43,7 +43,6 @@ function ny_times_districts($limit) {
   ));
 
   foreach($contact_addresses['values'] as $address) {
-    //CRM_Core_Error::debug_var('address', $address);
 
     $latitude = $longitude = $districts = $contact_id = '';
     
@@ -53,14 +52,12 @@ function ny_times_districts($limit) {
     //Assemble the API URL
     //FIXME HTTPS
     $url = "http://api.nytimes.com/svc/politics/v2/districts.json?api-key=$apikey&lat=$latitude&lng=$longitude";
-    //CRM_Core_Error::debug_var('url', $url);
 
     //Get results from API and decode the JSON
     //The query above returns all addresses in NY state, 
-    //so we have to ignore those request that fall outside New York City
+    //so we have to ignore those requests that fall outside New York City
     if (file_get_contents($url) != '' ) {
       $districts = json_decode(file_get_contents($url));
-      //CRM_Core_Error::debug_var('districts', $districts);
     }
 
     if( $districts->status == 'OK' ) {
