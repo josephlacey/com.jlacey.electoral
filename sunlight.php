@@ -76,6 +76,18 @@ function sunlight_civicrm_install() {
     );
     $openstates_districts_job = civicrm_api3('job', 'create', $openstates_districts_job_params);
 
+    //Contact NY City Council districts
+    $nytimes_districts_job_params = array(
+      'sequential' => 1,
+      'name'          => 'NY Times Districts API',
+      'description'   => 'Adds New York City Council districts to contacts',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'NyTimes',
+      'api_action'    => 'districts',
+      'is_active'     => 0,
+    );
+    $nytimes_districts_job = civicrm_api3('job', 'create', $nytimes_districts_job_params);
+
     return _sunlight_civix_civicrm_install();
 }
 
@@ -85,10 +97,20 @@ function sunlight_civicrm_install() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
 function sunlight_civicrm_uninstall() {
-  // create a sync job
+  //Deletes Sunlight Foundation Jobs
   $jobs = civicrm_api3('Job', 'get', array(
     'return' => "id",
     'name' => array('LIKE' => "Sunlight Foundation%"),
+  ));
+
+  foreach ($jobs['values'] as $job) {
+    $job_delete = civicrm_api3('job', 'delete', array('id' => $job['id'] ));
+  }
+
+  //Deletes Sunlight Foundation Jobs
+  $jobs = civicrm_api3('Job', 'get', array(
+    'return' => "id",
+    'name' => array('LIKE' => "NY Times Districts API"),
   ));
 
   foreach ($jobs['values'] as $job) {
