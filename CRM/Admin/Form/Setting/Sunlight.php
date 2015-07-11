@@ -11,6 +11,7 @@ class CRM_Admin_Form_Setting_Sunlight extends CRM_Admin_Form_Setting {
 
   protected $_settings = array(
     'sunlightFoundationAPIKey' => 'Sunlight Foundation API settings',
+    'addressLocationType' => 'Sunlight Foundation API settings',
     'includedOpenStates' => 'Sunlight Foundation API settings',
     'nyTimesAPIKey' => 'Sunlight Foundation API settings',
   );
@@ -18,6 +19,9 @@ class CRM_Admin_Form_Setting_Sunlight extends CRM_Admin_Form_Setting {
   function buildQuickForm() {
 
     $this->add('text', 'sunlightFoundationAPIKey', ts('Sunlight Foundation API key'), NULL);
+    $this->add('select', 'addressLocationType', ts('Address location for district lookup.'), 
+      CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id'), FALSE, array('class' => 'crm-select2')
+    );
     $this->add('select', 'includedOpenStates', ts('States included in Open States API calls'), 
       CRM_Core_PseudoConstant::stateProvince(), FALSE, array('multiple' => 'multiple', 'class' => 'crm-select2')
     );
