@@ -36,7 +36,7 @@ function sunlight_congress_legs($chamber) {
     $leg_count++;
 
     //Clear variables before each create
-    $leg_id = $civicrm_contact_id = $cid = '';
+    $leg_id = $civicrm_contact_id = $contact_id = '';
     $leg_contact_params = $leg_contact = '';
     $leg_email_params = $leg_email = $leg_email_exist = $leg_email_exist_id = '';
 
@@ -51,7 +51,7 @@ function sunlight_congress_legs($chamber) {
     ));
 
     if ( $civicrm_contact_id['count'] == 1 ) {
-      $cid = $civicrm_contact_id['id'];
+      $contact_id = $civicrm_contact_id['id'];
     }
 
     //Create or update the CiviCRM Contact
@@ -77,36 +77,85 @@ function sunlight_congress_legs($chamber) {
       'do_not_email' => 1,
     );
     //Only add the CiviCRM Contact ID as a create param if set   
-    if ( $cid != '' ) {
-      $leg_contact_params['id'] = $cid;
+    if ( $contact_id != '' ) {
+      $leg_contact_params['id'] = $contact_id;
     }
 
     $leg_contact = civicrm_api3('Contact', 'create', $leg_contact_params);
 
     //Repeating the Contact ID set in case this is a contact creation
     //and it's not set above.
-    $cid = $leg_contact['id'];
+    $contact_id = $leg_contact['id'];
 
-    $leg_details = civicrm_api3('CustomValue', 'get', array(
-      'sequential' => 1,
-      'entity_id' => $cid,
-      'custom_group_id' => 16,
+    //Need to determine if this is a create or an update, 
+    //so need to find is there's a value for the custom data
+    //Find Level custom field id number
+    //FIXME Updates to the multi-value custom data sets aren't currently working
+    //We're keeping this check in place to avoid duplicate data
+    $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
+      'return' => "id",
+      'custom_group_id' => "Representative_Details",
+      'label' => "Level",
     ));
-    //FIXME this doesn't update an existing entry on a multi-value custom data set
-    $leg_details_update = civicrm_api3('CustomValue', 'create', array(
-      'entity_id' => $cid,
-      'custom_Representative_Details:Level' => 'congress',
-      'custom_Representative_Details:State' => "$leg_state",
-      'custom_Representative_Details:Chamber' => "$leg_chamber",
-      'custom_Representative_Details:District' => "$leg_district",
-      'custom_Representative_Details:In office?' => 1,
+    $rep_details_level_field = 'custom_' . $rep_details_level_id;
+    $leg_rep_details_exists = civicrm_api3('Contact', 'get', array(
+      'return' => "id",
+      'id' => $contact_id,
+      "$rep_details_level_field" => "congress",
     ));
+
+    if ($leg_rep_details_exists['count'] == 1) {
+      /*
+      $rep_details_states_provinces_id = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'custom_group_id' => "Representative_Details",
+        'label' => "States/Provinces",
+      ));
+      $rep_details_states_provinces_field = 'custom_' . $rep_details_states_provinces_id;
+      $rep_details_chamber_id = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'custom_group_id' => "Representative_Details",
+        'label' => "Chamber",
+      ));
+      $rep_details_chamber_field = 'custom_' . $rep_details_chamber_id;
+      $rep_details_district_id = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'custom_group_id' => "Representative_Details",
+        'label' => "District",
+      ));
+      $rep_details_district_field = 'custom_' . $rep_details_district_id;
+      $rep_details_in_office_id = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'custom_group_id' => "Representative_Details",
+        'label' => "In Office?",
+      ));
+      $rep_details_in_office_field = 'custom_' . $rep_details_in_office_id;
+      $leg_rep_details_update = civicrm_api3('Contact', 'create', array(
+        'id' => $contact_id,
+        'contact_type' => "Individual",
+        "$rep_details_level_field" => "congress",
+        "$rep_details_states_provinces_field" => "$leg_state",
+        "$rep_details_chamber_field" => "$leg_chamber",
+        "$rep_details_district_field" => "$leg_district",
+        "$rep_details_in_office_field" => 1,
+      ));
+      */
+    } else {
+      $leg_rep_details_update = civicrm_api3('CustomValue', 'create', array(
+        'entity_id' => $contact_id,
+        'custom_Representative_Details:Level' => 'congress',
+        'custom_Representative_Details:States/Provinces' => "$leg_state",
+        'custom_Representative_Details:Chamber' => "$leg_chamber",
+        'custom_Representative_Details:District' => "$leg_district",
+        'custom_Representative_Details:In office?' => 1,
+      ));
+    }
 
     //Create the Email address
     //Check if contact has an email addres set, Main location type
     $leg_email_exist = civicrm_api3('Email', 'get', array(
       'return' => "email",
-      'contact_id' => $cid,
+      'contact_id' => $contact_id,
       'is_primary' => 1,
       'location_type_id' => 3,
     ));
@@ -123,7 +172,7 @@ function sunlight_congress_legs($chamber) {
       if ( ( $leg_email_exist['count'] == 1 && $leg_email_exist['values'][$leg_email_exist_id]['email'] != strtolower($leg_email ) ) || 
            $leg_email_exist['count'] == 0 ) {
         $leg_email_params = array(
-          'contact_id' => $cid,
+          'contact_id' => $contact_id,
           'location_type_id' => 3,
           'is_primary' => 1,
           'email' => $leg_email,
@@ -152,19 +201,15 @@ function civicrm_api3_congress_districts($params) {
 function sunlight_congress_districts($limit) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
-
+  $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
 
   //geo_code1 = latitude
   //geo_code2 = longitude
-  //FIXME this assumes the Home location type because we're assuming that's where folks are registered
-  //this obviously assumes a certain data model.  Should this assume the primary address?  
-  //the default address type?  Or should there be an address flag that is checked?
   $contact_addresses = civicrm_api3('Address', 'get', array(
     'return' => "contact_id,geo_code_1,geo_code_2",
-    //'contact_id' => array('IS NOT NULL' => 1),
-    'contact_id' => 202,
-    'location_type_id' => 1,
+    'contact_id' => array('IS NOT NULL' => 1),
+    'location_type_id' => $addressLocationType,
     'country_id' => 1228,
     'geo_code_1' => array('IS NOT NULL' => 1),
     'geo_code_2' => array('IS NOT NULL' => 1),
@@ -186,17 +231,60 @@ function sunlight_congress_districts($limit) {
 
     if( $districts['count'] == 1 ) {
       $contact_id = $address['contact_id'];
-      $contact_state = array_search($districts['results'][0]['state'], $states);
+      //$contact_state = array_search($districts['results'][0]['state'], $states);
+      $contact_state = $districts['results'][0]['state'];
       $contact_district = $districts['results'][0]['district'];
 
-      //Update the CiviCRM Contact
-      //FIXME this doesn't update an existing entry on a multi-value custom data set
-      $contact_rep_details_update = civicrm_api3('CustomValue', 'create', array(
-        'entity_id' => $contact_id,
-        'custom_Representative_Details:Level' => 'congress',
-        'custom_Representative_Details:State' => "$contact_state",
-        'custom_Representative_Details:District' => "$contact_district",
+      //Need to determine if this is a create or an update, 
+      //so need to find is there's a value for the custom data
+      //Find Level custom field id number
+      //FIXME Updates to the multi-value custom data sets aren't currently working
+      //We're keeping this check in place to avoid duplicate data
+      $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'custom_group_id' => "Representative_Details",
+        'label' => "Level",
       ));
+      $rep_details_level_field = 'custom_' . $rep_details_level_id;
+      $contact_rep_details_exists = civicrm_api3('Contact', 'get', array(
+        'return' => "id",
+        'id' => $contact_id,
+        "$rep_details_level_field" => "congress",
+      ));
+
+      if ($contact_rep_details_exists['count'] == 1) {
+        /*
+        $rep_details_states_provinces_id = civicrm_api3('CustomField', 'getvalue', array(
+          'return' => "id",
+          'custom_group_id' => "Representative_Details",
+          'label' => "States/Provinces",
+        ));
+        $rep_details_states_provinces_field = 'custom_' . $rep_details_states_provinces_id;
+        $rep_details_district_id = civicrm_api3('CustomField', 'getvalue', array(
+          'return' => "id",
+          'custom_group_id' => "Representative_Details",
+          'label' => "District",
+        ));
+        $rep_details_district_field = 'custom_' . $rep_details_district_id;
+        $contact_rep_details_update = civicrm_api3('Contact', 'create', array(
+          'id' => $contact_id,
+          'contact_type' => "Individual",
+          "$rep_details_level_field" => "congress",
+          "$rep_details_states_provinces_field" => "$contact_state",
+          "$rep_details_district_field" => "$contact_district",
+        ));
+        */
+      } else {
+        //Create the CiviCRM Contact
+        $contact_rep_details_create = civicrm_api3('CustomValue', 'create', array(
+          'version' => 3,
+          'entity_id' => $contact_id,
+          'custom_Representative_Details:Level' => 'congress',
+          'custom_Representative_Details:States/Provinces' => "$contact_state",
+          'custom_Representative_Details:District' => "$contact_district",
+        ));
+      }
+
     }
   }
 }
