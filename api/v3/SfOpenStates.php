@@ -21,19 +21,24 @@ function civicrm_api3_sf_open_states_reps($params) {
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Representatives successful."));
 }
 
-function electoral_sf_open_states_reps($chamber, $state = NULL) {
+function electoral_sf_open_states_reps($chamber, $state) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
 
   //Assemble the API URL
   //Unfortunately HTTPS isn't supported currently
-  $url = "http://openstates.org/api/v1/legislators/?apikey=$apikey&active=true&per_page=all&chamber=$chamber";
-  if ($state != NULL  ){
-    $url .= "&state=$state";
-  }
+  $url = "http://openstates.org/api/v1/legislators/?apikey=$apikey&active=true&per_page=all&chamber=$chamber&state=$state";
+
+  //Intitalize curl
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 
   //Get results from API and decode the JSON
-  $reps = json_decode(file_get_contents($url), TRUE);
+  $reps = json_decode(curl_exec($ch), TRUE);
+
+  //Close curl
+  curl_close($ch);
 
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
 
@@ -230,8 +235,16 @@ function electoral_sf_open_states_districts($limit, $state_id) {
     //Assemble the API URL
     $url = "http://openstates.org/api/v1/legislators/geo/?apikey=$apikey&lat=$latitude&long=$longitude";
 
+    //Intitalize curl
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+
     //Get results from API and decode the JSON
-    $districts = json_decode(file_get_contents($url), TRUE);
+    $districts = json_decode(curl_exec($ch), TRUE);
+
+    //Close curl
+    curl_close($ch);
 
     foreach ( $districts as $district ) {
       $contact_id = $address['contact_id'];

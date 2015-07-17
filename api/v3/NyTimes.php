@@ -48,21 +48,28 @@ function ny_times_districts($limit) {
     $longitude = $address['geo_code_2'];
 
     //Assemble the API URL
-    //FIXME HTTPS changes in php 5.6 http://php.net/manual/en/migration56.openssl.php 
     $url = "https://api.nytimes.com/svc/politics/v2/districts.json?api-key=$apikey&lat=$latitude&lng=$longitude";
 
-    //Get results from API and decode the JSON
-    //The query above returns all addresses in NY state, 
-    //so we have to ignore those requests that fall outside New York City
-    if (file_get_contents($url) != '' ) {
-      $districts = json_decode(file_get_contents($url));
-    }
+    //Intitalize curl
+    $verifySSL = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'verifySSL'));
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifySSL);
 
-    if( $districts->status == 'OK' ) {
+    //Get results from API and decode the JSON
+    $districts = json_decode(curl_exec($ch), TRUE);
+
+    //Close curl
+    curl_close($ch);
+
+    //The query above returns all addresses in NY state
+    //Any requests that fall outside New York City return with an error
+    if( $districts['status'] == 'OK' ) {
       $contact_id = $address['contact_id'];
-      foreach ($districts->results as $district) {
-        if ($district->level == 'City Council') {
-          $city_council_district = $district->district;
+      foreach ($districts['results'] as $district) {
+        if ($district['level'] == 'City Council') {
+          $city_council_district = $district['district'];
           
           //Need to determine if this is a create or an update, 
           //so need to find is there's a value for the custom data

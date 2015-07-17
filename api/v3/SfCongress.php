@@ -25,8 +25,16 @@ function electoral_sf_congress_legs($chamber) {
   //Assemble the API URL
   $url = "https://congress.api.sunlightfoundation.com/legislators?apikey=$apikey&in_office=true&per_page=all&chamber=$chamber";
 
+  //Intitalize curl
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, $url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+
   //Get results from API and decode the JSON
-  $legislators = json_decode(file_get_contents($url), TRUE);
+  $legislators = json_decode(curl_exec($ch), TRUE);
+
+  //Close curl
+  curl_close($ch);
 
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
   $leg_count = 0;
@@ -226,8 +234,16 @@ function electoral_sf_congress_districts($limit) {
     //Assemble the API URL
     $url = "https://congress.api.sunlightfoundation.com/districts/locate?apikey=$apikey&latitude=$latitude&longitude=$longitude";
 
+    //Intitalize curl
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+
     //Get results from API and decode the JSON
-    $districts = json_decode(file_get_contents($url), TRUE);
+    $districts = json_decode(curl_exec($ch), TRUE);
+
+    //Close curl
+    curl_close($ch);
 
     if( $districts['count'] == 1 ) {
       $contact_id = $address['contact_id'];
