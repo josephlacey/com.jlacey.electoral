@@ -1,14 +1,14 @@
 <?php
 
-require_once 'sunlight.civix.php';
+require_once 'electoral.civix.php';
 
 /**
  * Implementation of hook_civicrm_config
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
-function sunlight_civicrm_config(&$config) {
-  _sunlight_civix_civicrm_config($config);
+function electoral_civicrm_config(&$config) {
+  _electoral_civix_civicrm_config($config);
 }
 
 /**
@@ -18,8 +18,8 @@ function sunlight_civicrm_config(&$config) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
  */
-function sunlight_civicrm_xmlMenu(&$files) {
-  _sunlight_civix_civicrm_xmlMenu($files);
+function electoral_civicrm_xmlMenu(&$files) {
+  _electoral_civix_civicrm_xmlMenu($files);
 }
 
 /**
@@ -27,19 +27,19 @@ function sunlight_civicrm_xmlMenu(&$files) {
  *
  * @param $params array
  */
-function sunlight_civicrm_navigationMenu(&$params) {
+function electoral_civicrm_navigationMenu(&$params) {
   $path = "Administer/System Settings";
   $item = array(
-    'label' => ts('Sunlight Foundation API', array('coop.palantetech.sunlight')),
-    'name' => 'Sunlight Foundation API',
-    'url' => 'civicrm/admin/setting/sunlight',
+    'label' => ts('Electoral API', array('coop.palantetech.electoral')),
+    'name' => 'Electoral API',
+    'url' => 'civicrm/admin/setting/electoral',
     'permission' => 'administer CiviCRM',
     'operator' => '',
     'separator' => '',
     'active' => 1,
   );
 
-  $navigation = _sunlight_civix_insert_navigation_menu($params, $path, $item);
+  $navigation = _electoral_civix_insert_navigation_menu($params, $path, $item);
 }
 
 /**
@@ -47,14 +47,14 @@ function sunlight_civicrm_navigationMenu(&$params) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
-function sunlight_civicrm_install() {
+function electoral_civicrm_install() {
     //Congress API
     $congress_job_params = array(
       'sequential' => 1,
       'name'          => 'Sunlight Foundation Congress API - Legislators',
       'description'   => 'Creates US legislator contacts via the Sunlight Foundation Congress API',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'Congress',
+      'api_entity'    => 'SfCongress',
       'api_action'    => 'legs',
       'is_active'     => 0,
     );
@@ -66,7 +66,7 @@ function sunlight_civicrm_install() {
       'name'          => 'Sunlight Foundation Congress API - Districts',
       'description'   => 'Adds US legislative districts to contacts',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'Congress',
+      'api_entity'    => 'SfCongress',
       'api_action'    => 'districts',
       'parameters'    => 'limit=1',
       'is_active'     => 0,
@@ -79,7 +79,7 @@ function sunlight_civicrm_install() {
       'name'          => 'Sunlight Foundation Open States API - Representatives',
       'description'   => 'Creates state representative contacts via the Sunlight Foundation Open States API',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'OpenStates',
+      'api_entity'    => 'SfOpenStates',
       'api_action'    => 'reps',
       'is_active'     => 0,
     );
@@ -91,7 +91,7 @@ function sunlight_civicrm_install() {
       'name'          => 'Sunlight Foundation Open States API - Districts',
       'description'   => 'Adds state representative districts to contacts',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'OpenStates',
+      'api_entity'    => 'SfOpenStates',
       'api_action'    => 'districts',
       'parameters'    => 'limit=1',
       'is_active'     => 0,
@@ -111,7 +111,7 @@ function sunlight_civicrm_install() {
     );
     $nytimes_districts_job = civicrm_api3('job', 'create', $nytimes_districts_job_params);
 
-    return _sunlight_civix_civicrm_install();
+    return _electoral_civix_civicrm_install();
 }
 
 /**
@@ -119,7 +119,7 @@ function sunlight_civicrm_install() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
-function sunlight_civicrm_uninstall() {
+function electoral_civicrm_uninstall() {
   //Deletes Sunlight Foundation Jobs
   $sunlight_jobs = civicrm_api3('Job', 'get', array(
     'return' => "id",
@@ -130,7 +130,7 @@ function sunlight_civicrm_uninstall() {
     $sunlight_job_delete = civicrm_api3('job', 'delete', array('id' => $sunlight_job['id'] ));
   }
 
-  //Deletes Sunlight Foundation Jobs
+  //Deletes NY Times Job
   $ny_times_jobs = civicrm_api3('Job', 'get', array(
     'return' => "id",
     'name' => array('LIKE' => "NY Times Districts API"),
@@ -140,7 +140,7 @@ function sunlight_civicrm_uninstall() {
     $ny_times_job_delete = civicrm_api3('job', 'delete', array('id' => $ny_times_job['id'] ));
   }
 
-  return _sunlight_civix_civicrm_uninstall();
+  return _electoral_civix_civicrm_uninstall();
 }
 
 /**
@@ -148,9 +148,9 @@ function sunlight_civicrm_uninstall() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
-function sunlight_civicrm_enable() {
-  sunlight_create_custom_fields();
-  return _sunlight_civix_civicrm_enable();
+function electoral_civicrm_enable() {
+  electoral_create_custom_fields();
+  return _electoral_civix_civicrm_enable();
 }
 
 /**
@@ -158,8 +158,8 @@ function sunlight_civicrm_enable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
  */
-function sunlight_civicrm_disable() {
-  _sunlight_civix_civicrm_disable();
+function electoral_civicrm_disable() {
+  _electoral_civix_civicrm_disable();
 }
 
 /**
@@ -173,8 +173,8 @@ function sunlight_civicrm_disable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
  */
-function sunlight_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  return _sunlight_civix_civicrm_upgrade($op, $queue);
+function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
+  return _electoral_civix_civicrm_upgrade($op, $queue);
 }
 
 /**
@@ -185,8 +185,8 @@ function sunlight_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
-function sunlight_civicrm_managed(&$entities) {
-  _sunlight_civix_civicrm_managed($entities);
+function electoral_civicrm_managed(&$entities) {
+  _electoral_civix_civicrm_managed($entities);
 }
 
 /**
@@ -198,8 +198,8 @@ function sunlight_civicrm_managed(&$entities) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
-function sunlight_civicrm_caseTypes(&$caseTypes) {
-  _sunlight_civix_civicrm_caseTypes($caseTypes);
+function electoral_civicrm_caseTypes(&$caseTypes) {
+  _electoral_civix_civicrm_caseTypes($caseTypes);
 }
 
 /**
@@ -207,15 +207,15 @@ function sunlight_civicrm_caseTypes(&$caseTypes) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
  */
-function sunlight_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
-  _sunlight_civix_civicrm_alterSettingsFolders($metaDataFolders);
+function electoral_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
+  _electoral_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
 /**
  * Create the custom fields used to record subject and body
  *
  */
-function sunlight_create_custom_fields() {
+function electoral_create_custom_fields() {
   //Check if Representation Details custom data group already exists
   $rd_group = civicrm_api3('CustomGroup', 'get', array( 'title' => "Representative Details", ));
 
@@ -232,13 +232,13 @@ function sunlight_create_custom_fields() {
 
     //Create Level Option Group and Values
     $rd_level_og = civicrm_api3('OptionGroup', 'create', array(
-      'name' => "sunlight_level_options",
+      'name' => "electoral_level_options",
       'title' => "Level",
       'is_active' => 1,
     ));
     $rd_level_id = $rd_level_og['id'];
     $rd_level_congress = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "sunlight_level_options",
+      'option_group_id' => "electoral_level_options",
       'label' => "Federal",
       'value' => "congress",
       'name' => "Federal",
@@ -246,7 +246,7 @@ function sunlight_create_custom_fields() {
       'is_active' => 1,
     ));
     $rd_level_openstates = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "sunlight_level_options",
+      'option_group_id' => "electoral_level_options",
       'label' => "State/Province",
       'value' => "openstates",
       'name' => "State/Province",
@@ -254,7 +254,7 @@ function sunlight_create_custom_fields() {
       'is_active' => 1,
     ));
     $rd_level_city = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "sunlight_level_options",
+      'option_group_id' => "electoral_level_options",
       'label' => "City",
       'value' => "nytimes",
       'name' => "City",
@@ -264,13 +264,13 @@ function sunlight_create_custom_fields() {
     
     //Create Chamber Option Group and Values
     $rd_chamber_og = civicrm_api3('OptionGroup', 'create', array(
-      'name' => "sunlight_chamber_options",
+      'name' => "electoral_chamber_options",
       'title' => "Chamber",
       'is_active' => 1,
     ));
     $rd_chamber_id = $rd_chamber_og['id'];
     $rd_chamber_upper = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "sunlight_chamber_options",
+      'option_group_id' => "electoral_chamber_options",
       'label' => "Upper",
       'value' => "upper",
       'name' => "Upper",
@@ -278,7 +278,7 @@ function sunlight_create_custom_fields() {
       'is_active' => 1,
     ));
     $rd_chamber_lower = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "sunlight_chamber_options",
+      'option_group_id' => "electoral_chamber_options",
       'label' => "Lower",
       'value' => "lower",
       'name' => "Lower",
@@ -290,7 +290,7 @@ function sunlight_create_custom_fields() {
     $rd_level_field = civicrm_api3('CustomField', 'create', array(
       'custom_group_id' => "Representative_Details",
       'label' => "Level",
-      'name' => "sunlight_level",
+      'name' => "electoral_level",
       'data_type' => "String",
       'html_type' => "Select",
       'is_searchable' => 1,
@@ -302,7 +302,7 @@ function sunlight_create_custom_fields() {
     $rd_states_provinces_field = civicrm_api3('CustomField', 'create', array(
       'custom_group_id' => "Representative_Details",
       'label' => "States/Provinces",
-      'name' => "sunlight_states_provinces",
+      'name' => "electoral_states_provinces",
       'data_type' => "StateProvince",
       'html_type' => "Select State/Province",
       'is_searchable' => 1,
@@ -313,7 +313,7 @@ function sunlight_create_custom_fields() {
     $rd_chamber_field = civicrm_api3('CustomField', 'create', array(
       'custom_group_id' => "Representative_Details",
       'label' => "Chamber",
-      'name' => "sunlight_chamber",
+      'name' => "electoral_chamber",
       'data_type' => "String",
       'html_type' => "Select",
       'is_searchable' => 1,
@@ -325,7 +325,7 @@ function sunlight_create_custom_fields() {
     $rd_district_field = civicrm_api3('CustomField', 'create', array(
       'custom_group_id' => "Representative_Details",
       'label' => "District",
-      'name' => "sunlight_district",
+      'name' => "electoral_district",
       'data_type' => "Integer",
       'html_type' => "Text",
       'is_searchable' => 1,
@@ -337,7 +337,7 @@ function sunlight_create_custom_fields() {
       'sequential' => 1,
       'custom_group_id' => "Representative_Details",
       'label' => "In Office?",
-      'name' => "sunlight_in_office",
+      'name' => "electoral_in_office",
       'data_type' => "Boolean",
       'html_type' => "Radio",
       'is_searchable' => 1,

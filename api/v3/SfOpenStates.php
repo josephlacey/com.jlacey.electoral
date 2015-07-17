@@ -9,23 +9,24 @@
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */ 
-function civicrm_api3_open_states_reps($params) {
+function civicrm_api3_sf_open_states_reps($params) {
 
   $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
   foreach ($open_states as $state_id) {
     $state_abbr = CRM_Core_PseudoConstant::stateProvinceAbbreviation($state_id);
-    sunlight_open_states_reps('upper', "$state_abbr");
-    sunlight_open_states_reps('lower', "$state_abbr");
+    electoral_sf_open_states_reps('upper', "$state_abbr");
+    electoral_sf_open_states_reps('lower', "$state_abbr");
   }
   
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Representatives successful."));
 }
 
-function sunlight_open_states_reps($chamber, $state = NULL) {
+function electoral_sf_open_states_reps($chamber, $state = NULL) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
 
   //Assemble the API URL
+  //Unfortunately HTTPS isn't supported currently
   $url = "http://openstates.org/api/v1/legislators/?apikey=$apikey&active=true&per_page=all&chamber=$chamber";
   if ($state != NULL  ){
     $url .= "&state=$state";
@@ -183,7 +184,7 @@ function sunlight_open_states_reps($chamber, $state = NULL) {
   CRM_Core_Error::debug_var("Number of $state $chamber chamber representatives created", $rep_count);
 }
 
-function civicrm_api3_open_states_districts($params) {
+function civicrm_api3_sf_open_states_districts($params) {
 
   $limit = '';
   if (isset($params['limit']) && is_numeric($params['limit'])) {
@@ -194,14 +195,14 @@ function civicrm_api3_open_states_districts($params) {
 
   $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
   foreach ($open_states as $state_id) {
-    sunlight_open_states_districts($params['limit'], $state_id);
+    electoral_sf_open_states_districts($params['limit'], $state_id);
   }
 
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Districts successful."));
 
 }
 
-function sunlight_open_states_districts($limit, $state_id) {
+function electoral_sf_open_states_districts($limit, $state_id) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
   $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));

@@ -5,8 +5,8 @@
  */
 return array(
   'sunlightFoundationAPIKey' => array(
-    'group_name' => 'Sunlight Foundation API settings',
-    'group' => 'sunlight',
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
     'name' => 'sunlightFoundationAPIKey',
     'type' => 'Text',
     'default' => '',
@@ -17,8 +17,8 @@ return array(
     'help_text' => 'Add your registered Sunlight Foundation API Key for Congress and Open States API calls.',
   ),
   'addressLocationType' => array(
-    'group_name' => 'Sunlight Foundation API settings',
-    'group' => 'sunlight',
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
     'name' => 'addressLocationType',
     'type' => 'Integer',
     'default' => '1',
@@ -29,8 +29,8 @@ return array(
     'help_text' => 'Select the address location type to use when looking up a contact\'s districts.',
   ),
   'includedOpenStates' => array(
-    'group_name' => 'Sunlight Foundation API settings',
-    'group' => 'sunlight',
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
     'name' => 'includedOpenStates',
     'type' => 'Array',
     'default' => '',
@@ -41,8 +41,8 @@ return array(
     'help_text' => 'Add states to include in Open States API scheduled jobs',
   ),
   'nyTimesAPIKey' => array(
-    'group_name' => 'Sunlight Foundation API settings',
-    'group' => 'sunlight',
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
     'name' => 'nyTimesAPIKey',
     'type' => 'Text',
     'default' => '',

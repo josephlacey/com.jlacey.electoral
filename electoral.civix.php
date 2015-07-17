@@ -7,7 +7,7 @@
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
-function _sunlight_civix_civicrm_config(&$config = NULL) {
+function _electoral_civix_civicrm_config(&$config = NULL) {
   static $configured = FALSE;
   if ($configured) return;
   $configured = TRUE;
@@ -33,8 +33,8 @@ function _sunlight_civix_civicrm_config(&$config = NULL) {
  * @param $files array(string)
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
  */
-function _sunlight_civix_civicrm_xmlMenu(&$files) {
-  foreach (_sunlight_civix_glob(__DIR__ . '/xml/Menu/*.xml') as $file) {
+function _electoral_civix_civicrm_xmlMenu(&$files) {
+  foreach (_electoral_civix_glob(__DIR__ . '/xml/Menu/*.xml') as $file) {
     $files[] = $file;
   }
 }
@@ -44,9 +44,9 @@ function _sunlight_civix_civicrm_xmlMenu(&$files) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
-function _sunlight_civix_civicrm_install() {
-  _sunlight_civix_civicrm_config();
-  if ($upgrader = _sunlight_civix_upgrader()) {
+function _electoral_civix_civicrm_install() {
+  _electoral_civix_civicrm_config();
+  if ($upgrader = _electoral_civix_upgrader()) {
     $upgrader->onInstall();
   }
 }
@@ -56,9 +56,9 @@ function _sunlight_civix_civicrm_install() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
-function _sunlight_civix_civicrm_uninstall() {
-  _sunlight_civix_civicrm_config();
-  if ($upgrader = _sunlight_civix_upgrader()) {
+function _electoral_civix_civicrm_uninstall() {
+  _electoral_civix_civicrm_config();
+  if ($upgrader = _electoral_civix_upgrader()) {
     $upgrader->onUninstall();
   }
 }
@@ -68,9 +68,9 @@ function _sunlight_civix_civicrm_uninstall() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
-function _sunlight_civix_civicrm_enable() {
-  _sunlight_civix_civicrm_config();
-  if ($upgrader = _sunlight_civix_upgrader()) {
+function _electoral_civix_civicrm_enable() {
+  _electoral_civix_civicrm_config();
+  if ($upgrader = _electoral_civix_upgrader()) {
     if (is_callable(array($upgrader, 'onEnable'))) {
       $upgrader->onEnable();
     }
@@ -83,9 +83,9 @@ function _sunlight_civix_civicrm_enable() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
  * @return mixed
  */
-function _sunlight_civix_civicrm_disable() {
-  _sunlight_civix_civicrm_config();
-  if ($upgrader = _sunlight_civix_upgrader()) {
+function _electoral_civix_civicrm_disable() {
+  _electoral_civix_civicrm_config();
+  if ($upgrader = _electoral_civix_upgrader()) {
     if (is_callable(array($upgrader, 'onDisable'))) {
       $upgrader->onDisable();
     }
@@ -103,20 +103,20 @@ function _sunlight_civix_civicrm_disable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
  */
-function _sunlight_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  if ($upgrader = _sunlight_civix_upgrader()) {
+function _electoral_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
+  if ($upgrader = _electoral_civix_upgrader()) {
     return $upgrader->onUpgrade($op, $queue);
   }
 }
 
 /**
- * @return CRM_Sunlight_Upgrader
+ * @return CRM_Electoral_Upgrader
  */
-function _sunlight_civix_upgrader() {
-  if (!file_exists(__DIR__.'/CRM/Sunlight/Upgrader.php')) {
+function _electoral_civix_upgrader() {
+  if (!file_exists(__DIR__.'/CRM/Electoral/Upgrader.php')) {
     return NULL;
   } else {
-    return CRM_Sunlight_Upgrader_Base::instance();
+    return CRM_Electoral_Upgrader_Base::instance();
   }
 }
 
@@ -130,7 +130,7 @@ function _sunlight_civix_upgrader() {
  * @param $pattern string, glob pattern, eg "*.txt"
  * @return array(string)
  */
-function _sunlight_civix_find_files($dir, $pattern) {
+function _electoral_civix_find_files($dir, $pattern) {
   if (is_callable(array('CRM_Utils_File', 'findFiles'))) {
     return CRM_Utils_File::findFiles($dir, $pattern);
   }
@@ -139,7 +139,7 @@ function _sunlight_civix_find_files($dir, $pattern) {
   $result = array();
   while (!empty($todos)) {
     $subdir = array_shift($todos);
-    foreach (_sunlight_civix_glob("$subdir/$pattern") as $match) {
+    foreach (_electoral_civix_glob("$subdir/$pattern") as $match) {
       if (!is_dir($match)) {
         $result[] = $match;
       }
@@ -164,13 +164,13 @@ function _sunlight_civix_find_files($dir, $pattern) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
-function _sunlight_civix_civicrm_managed(&$entities) {
-  $mgdFiles = _sunlight_civix_find_files(__DIR__, '*.mgd.php');
+function _electoral_civix_civicrm_managed(&$entities) {
+  $mgdFiles = _electoral_civix_find_files(__DIR__, '*.mgd.php');
   foreach ($mgdFiles as $file) {
     $es = include $file;
     foreach ($es as $e) {
       if (empty($e['module'])) {
-        $e['module'] = 'coop.palantetech.sunlight';
+        $e['module'] = 'coop.palantetech.electoral';
       }
       $entities[] = $e;
     }
@@ -186,12 +186,12 @@ function _sunlight_civix_civicrm_managed(&$entities) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
-function _sunlight_civix_civicrm_caseTypes(&$caseTypes) {
+function _electoral_civix_civicrm_caseTypes(&$caseTypes) {
   if (!is_dir(__DIR__ . '/xml/case')) {
     return;
   }
 
-  foreach (_sunlight_civix_glob(__DIR__ . '/xml/case/*.xml') as $file) {
+  foreach (_electoral_civix_glob(__DIR__ . '/xml/case/*.xml') as $file) {
     $name = preg_replace('/\.xml$/', '', basename($file));
     if ($name != CRM_Case_XMLProcessor::mungeCaseType($name)) {
       $errorMessage = sprintf("Case-type file name is malformed (%s vs %s)", $name, CRM_Case_XMLProcessor::mungeCaseType($name));
@@ -199,7 +199,7 @@ function _sunlight_civix_civicrm_caseTypes(&$caseTypes) {
       // throw new CRM_Core_Exception($errorMessage);
     }
     $caseTypes[$name] = array(
-      'module' => 'coop.palantetech.sunlight',
+      'module' => 'coop.palantetech.electoral',
       'name' => $name,
       'file' => $file,
     );
@@ -218,7 +218,7 @@ function _sunlight_civix_civicrm_caseTypes(&$caseTypes) {
  * @param string $pattern
  * @return array, possibly empty
  */
-function _sunlight_civix_glob($pattern) {
+function _electoral_civix_glob($pattern) {
   $result = glob($pattern);
   return is_array($result) ? $result : array();
 }
@@ -231,7 +231,7 @@ function _sunlight_civix_glob($pattern) {
  * $item - menu you need to insert (parent/child attributes will be filled for you)
  * $parentId - used internally to recurse in the menu structure
  */
-function _sunlight_civix_insert_navigation_menu(&$menu, $path, $item, $parentId = NULL) {
+function _electoral_civix_insert_navigation_menu(&$menu, $path, $item, $parentId = NULL) {
   static $navId;
 
   // If we are done going down the path, insert menu
@@ -255,7 +255,7 @@ function _sunlight_civix_insert_navigation_menu(&$menu, $path, $item, $parentId 
     foreach ($menu as $key => &$entry) {
       if ($entry['attributes']['name'] == $first) {
         if (!$entry['child']) $entry['child'] = array();
-        $found = _sunlight_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item, $key);
+        $found = _electoral_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item, $key);
       }
     }
     return $found;
@@ -267,7 +267,7 @@ function _sunlight_civix_insert_navigation_menu(&$menu, $path, $item, $parentId 
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
  */
-function _sunlight_civix_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
+function _electoral_civix_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   static $configured = FALSE;
   if ($configured) return;
   $configured = TRUE;

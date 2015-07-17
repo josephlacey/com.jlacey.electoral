@@ -1,7 +1,7 @@
 <?php 
 
 /**
- * Sunlight Foundation Congress API
+ * NY Times API
  *
  * @param array $params
  * @return array API result descriptor

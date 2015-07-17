@@ -7,13 +7,13 @@
  *
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC43/QuickForm+Reference
  */
-class CRM_Admin_Form_Setting_Sunlight extends CRM_Admin_Form_Setting {
+class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   protected $_settings = array(
-    'sunlightFoundationAPIKey' => 'Sunlight Foundation API settings',
-    'addressLocationType' => 'Sunlight Foundation API settings',
-    'includedOpenStates' => 'Sunlight Foundation API settings',
-    'nyTimesAPIKey' => 'Sunlight Foundation API settings',
+    'sunlightFoundationAPIKey' => 'Electoral API settings',
+    'addressLocationType' => 'Electoral API settings',
+    'includedOpenStates' => 'Electoral API settings',
+    'nyTimesAPIKey' => 'Electoral API settings',
   );
 
   function buildQuickForm() {

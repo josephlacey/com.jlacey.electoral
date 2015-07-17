@@ -9,16 +9,16 @@
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */ 
-function civicrm_api3_congress_legs($params) {
+function civicrm_api3_sf_congress_legs($params) {
 
-  sunlight_congress_legs('senate');
-  sunlight_congress_legs('house');
+  electoral_sf_congress_legs('senate');
+  electoral_sf_congress_legs('house');
   
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Legislators successful."));
 
 }
 
-function sunlight_congress_legs($chamber) {
+function electoral_sf_congress_legs($chamber) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
 
@@ -185,7 +185,7 @@ function sunlight_congress_legs($chamber) {
   CRM_Core_Error::debug_var("Number of $chamber legislators created", $leg_count);
 }
 
-function civicrm_api3_congress_districts($params) {
+function civicrm_api3_sf_congress_districts($params) {
 
   $limit = '';
   if (isset($params['limit']) && is_numeric($params['limit'])) {
@@ -193,12 +193,12 @@ function civicrm_api3_congress_districts($params) {
   } else {
     return civicrm_api3_create_error(array(1), array("Sunlight Foundation Congress API - Districts limit is not an integer."));
   }
-  sunlight_congress_districts($params['limit']);
+  electoral_sf_congress_districts($params['limit']);
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Districts successful."));
 
 }
 
-function sunlight_congress_districts($limit) {
+function electoral_sf_congress_districts($limit) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
   $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
