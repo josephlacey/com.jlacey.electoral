@@ -10,8 +10,8 @@
   </maintainer>
   <urls>
     <url desc="Main Extension Page">http://git.palantetech.coop/palante/civicrm/extensions/coop.palantetech.electoral/</url>
-    <url desc="Documentation">https://hq.palantetech.coop/projects/electoral/wiki</url>
-    <url desc="Support">https://hq.palantetech.coop/projects/electoral/issues/new</url>
+    <url desc="Documentation">https://hq.palantetech.coop/projects/electoral-api/wiki</url>
+    <url desc="Support">https://hq.palantetech.coop/projects/electoral-api/issues/new</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2015-03-02</releaseDate>
