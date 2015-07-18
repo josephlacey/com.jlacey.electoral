@@ -11,18 +11,12 @@
  */ 
 function civicrm_api3_ny_times_districts($params) {
 
-  $limit = '';
-  if (isset($params['limit']) && is_numeric($params['limit'])) {
-    $limit = $params['limit'];
-  } else {
-    return civicrm_api3_create_error(array(1), array("NY Times Districts API limit is not an integer."));
-  }
-  ny_times_districts($limit);
+  ny_times_districts();
   return civicrm_api3_create_success(array(1), array("NY Times Districts API successful."));
 
 }
 
-function ny_times_districts($limit) {
+function ny_times_districts() {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'nyTimesAPIKey'));
   $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
@@ -37,7 +31,6 @@ function ny_times_districts($limit) {
     'country_id' => 1228,
     'geo_code_1' => array('IS NOT NULL' => 1),
     'geo_code_2' => array('IS NOT NULL' => 1),
-    'options' => array('limit' => $limit),
   ));
 
   foreach($contact_addresses['values'] as $address) {

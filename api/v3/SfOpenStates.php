@@ -191,23 +191,15 @@ function electoral_sf_open_states_reps($chamber, $state) {
 
 function civicrm_api3_sf_open_states_districts($params) {
 
-  $limit = '';
-  if (isset($params['limit']) && is_numeric($params['limit'])) {
-    $limit = $params['limit'];
-  } else {
-    return civicrm_api3_create_error(array(1), array("Sunlight Foundation Open States API - Districts limit is not an integer."));
-  }
-
   $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
   foreach ($open_states as $state_id) {
-    electoral_sf_open_states_districts($params['limit'], $state_id);
+    electoral_sf_open_states_districts($state_id);
   }
-
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Districts successful."));
 
 }
 
-function electoral_sf_open_states_districts($limit, $state_id) {
+function electoral_sf_open_states_districts($state_id) {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
   $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
@@ -222,7 +214,6 @@ function electoral_sf_open_states_districts($limit, $state_id) {
     'country_id' => 1228,
     'geo_code_1' => array('IS NOT NULL' => 1),
     'geo_code_2' => array('IS NOT NULL' => 1),
-    'options' => array('limit' => $limit),
   ));
 
   foreach($contact_addresses['values'] as $address) {

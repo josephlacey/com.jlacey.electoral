@@ -68,7 +68,7 @@ function electoral_civicrm_install() {
       'run_frequency' => 'Daily',
       'api_entity'    => 'SfCongress',
       'api_action'    => 'districts',
-      'parameters'    => 'limit=1',
+      'parameters'    => '',
       'is_active'     => 0,
     );
     $congress_districts_job = civicrm_api3('job', 'create', $congress_districts_job_params);
@@ -93,7 +93,7 @@ function electoral_civicrm_install() {
       'run_frequency' => 'Daily',
       'api_entity'    => 'SfOpenStates',
       'api_action'    => 'districts',
-      'parameters'    => 'limit=1',
+      'parameters'    => '',
       'is_active'     => 0,
     );
     $openstates_districts_job = civicrm_api3('job', 'create', $openstates_districts_job_params);
@@ -106,7 +106,7 @@ function electoral_civicrm_install() {
       'run_frequency' => 'Daily',
       'api_entity'    => 'NyTimes',
       'api_action'    => 'districts',
-      'parameters'    => 'limit=1',
+      'parameters'    => '',
       'is_active'     => 0,
     );
     $nytimes_districts_job = civicrm_api3('job', 'create', $nytimes_districts_job_params);

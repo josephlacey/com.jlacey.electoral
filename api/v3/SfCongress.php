@@ -195,18 +195,12 @@ function electoral_sf_congress_legs($chamber) {
 
 function civicrm_api3_sf_congress_districts($params) {
 
-  $limit = '';
-  if (isset($params['limit']) && is_numeric($params['limit'])) {
-    $limit = $params['limit'];
-  } else {
-    return civicrm_api3_create_error(array(1), array("Sunlight Foundation Congress API - Districts limit is not an integer."));
-  }
-  electoral_sf_congress_districts($params['limit']);
+  electoral_sf_congress_districts();
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Districts successful."));
 
 }
 
-function electoral_sf_congress_districts($limit) {
+function electoral_sf_congress_districts() {
 
   $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
   $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
@@ -214,14 +208,27 @@ function electoral_sf_congress_districts($limit) {
 
   //geo_code1 = latitude
   //geo_code2 = longitude
+  /* FIXME throttling doesn't work
+  $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
+    'return' => "id",
+    'custom_group_id' => "Representative_Details",
+    'label' => "Level",
+  ));
+  $rep_details_level_field = 'custom_' . $rep_details_level_id;
+  */
   $contact_addresses = civicrm_api3('Address', 'get', array(
-    'return' => "contact_id,geo_code_1,geo_code_2",
-    'contact_id' => array('IS NOT NULL' => 1),
+    'sequential' => 1, 
+    'return' => "contact_id,geo_code_1,geo_code_2", 
+    'geo_code_1' => array('IS NOT NULL' => 1), 
+    'geo_code_2' => array('IS NOT NULL' => 1), 
+    'country_id' => "US", 
     'location_type_id' => $addressLocationType,
-    'country_id' => 1228,
-    'geo_code_1' => array('IS NOT NULL' => 1),
-    'geo_code_2' => array('IS NOT NULL' => 1),
-    'options' => array('limit' => $limit),
+    //'api.Contact.get' => array(
+      //'sequential' => 1, 
+      //'return' => 'id',
+      //'id' => '$value.id',
+      //"$rep_details_level_field" => array('!=' => 'congress'),
+    //),
   ));
 
   foreach($contact_addresses['values'] as $address) {
@@ -256,12 +263,6 @@ function electoral_sf_congress_districts($limit) {
       //Find Level custom field id number
       //FIXME Updates to the multi-value custom data sets aren't currently working
       //We're keeping this check in place to avoid duplicate data
-      $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
-        'return' => "id",
-        'custom_group_id' => "Representative_Details",
-        'label' => "Level",
-      ));
-      $rep_details_level_field = 'custom_' . $rep_details_level_id;
       $contact_rep_details_exists = civicrm_api3('Contact', 'get', array(
         'return' => "id",
         'id' => $contact_id,
