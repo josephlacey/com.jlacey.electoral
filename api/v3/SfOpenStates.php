@@ -253,9 +253,16 @@ function electoral_sf_open_states_districts($state_id) {
         'label' => "Level",
       ));
       $rep_details_level_field = 'custom_' . $rep_details_level_id;
+      $rep_details_chamber_id = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'custom_group_id' => "Representative_Details",
+        'label' => "Chamber",
+      ));
+      $rep_details_chamber_field = 'custom_' . $rep_details_chamber_id;
       $contact_rep_details_exists = civicrm_api3('Contact', 'get', array(
         'return' => "id",
         'id' => $contact_id,
+        "$rep_details_chamber_field" => "$contact_chamber", 
         "$rep_details_level_field" => "openstates",
       ));
 
