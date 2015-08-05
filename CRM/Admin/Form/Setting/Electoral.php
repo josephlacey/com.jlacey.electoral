@@ -19,8 +19,10 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   function buildQuickForm() {
 
     $this->add('text', 'sunlightFoundationAPIKey', ts('Sunlight Foundation API key'), NULL);
+		$this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
+		$this->_location_types = array('Primary') + $this->_location_types;
     $this->add('select', 'addressLocationType', ts('Address location for district lookup.'), 
-      CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id'), FALSE, array('class' => 'crm-select2')
+      $this->_location_types, FALSE, array('class' => 'crm-select2')
     );
     $this->add('select', 'includedOpenStates', ts('States included in Open States API calls'), 
       CRM_Core_PseudoConstant::stateProvince(), FALSE, array('multiple' => 'multiple', 'class' => 'crm-select2')
