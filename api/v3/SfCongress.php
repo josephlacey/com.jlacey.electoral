@@ -216,7 +216,7 @@ function electoral_sf_congress_districts() {
   ));
   $rep_details_level_field = 'custom_' . $rep_details_level_id;
   */
-  $contact_addresses = civicrm_api3('Address', 'get', array(
+  $address_params = array(
     'sequential' => 1, 
     'return' => "contact_id,geo_code_1,geo_code_2", 
     'geo_code_1' => array('IS NOT NULL' => 1), 
@@ -229,7 +229,13 @@ function electoral_sf_congress_districts() {
       //'id' => '$value.id',
       //"$rep_details_level_field" => array('!=' => 'congress'),
     //),
-  ));
+  );
+  // handle a location type of "Primary".
+  if ($addressLocationType == 0) {
+    unset($address_params['location_type_id']);
+   $address_params['is_primary'] = 1;
+  }
+  $contact_addresses = civicrm_api3('Address', 'get', $address_params);
 
   foreach($contact_addresses['values'] as $address) {
 
