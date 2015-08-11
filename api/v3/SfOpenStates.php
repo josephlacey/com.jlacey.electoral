@@ -77,6 +77,7 @@ function electoral_sf_open_states_reps($chamber, $state) {
       'contact_type' => 'Individual',
       'first_name' => "$rep_first_name",
       'last_name' => "$rep_last_name",
+      'do_not_email' => 1,
     );
     //Only add the CiviCRM Contact ID as a create param if set   
     if ($contact_id != '') {
