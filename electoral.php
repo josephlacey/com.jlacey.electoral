@@ -326,7 +326,7 @@ function electoral_create_custom_fields() {
       'custom_group_id' => "Representative_Details",
       'label' => "District",
       'name' => "electoral_district",
-      'data_type' => "Integer",
+      'data_type' => "String",
       'html_type' => "Text",
       'is_searchable' => 1,
       'weight' => 4,
