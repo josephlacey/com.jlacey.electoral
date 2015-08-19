@@ -11,7 +11,7 @@
  */ 
 function civicrm_api3_sf_open_states_reps($params) {
 
-  $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
+  $open_states = civicrm_api3('Setting', 'getvalue', array('name' => 'includedOpenStates'));
   foreach ($open_states as $state_id) {
     $state_abbr = CRM_Core_PseudoConstant::stateProvinceAbbreviation($state_id);
     electoral_sf_open_states_reps('upper', "$state_abbr");
@@ -23,7 +23,7 @@ function civicrm_api3_sf_open_states_reps($params) {
 
 function electoral_sf_open_states_reps($chamber, $state) {
 
-  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
 
   //Assemble the API URL
   //Unfortunately HTTPS isn't supported currently
@@ -192,42 +192,99 @@ function electoral_sf_open_states_reps($chamber, $state) {
 
 function civicrm_api3_sf_open_states_districts($params) {
 
-  $open_states = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'includedOpenStates'));
+  $open_states = civicrm_api3('Setting', 'getvalue', array('name' => 'includedOpenStates'));
   foreach ($open_states as $state_id) {
-    electoral_sf_open_states_districts($state_id);
+    if (isset($params['limit']) && is_numeric($params['limit']) ) {
+      electoral_sf_open_states_districts($params['limit'], $state_id);
+    } else {
+      electoral_sf_open_states_districts(100, $state_id);
+    }
   }
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Districts successful."));
 
 }
 
-function electoral_sf_open_states_districts($state_id) {
+function electoral_sf_open_states_districts($limit, $state_id) {
 
-  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
-  $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
+
+  // The custom group table name and field column names aren't included because
+  // coming from the API presumably their sanitized AND
+  // Civi quotes the string, so the query returns with a syntax error
+  $rep_details_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
+    'return' => "table_name",
+    'name' => "Representative_Details",
+    'label' => "Level",
+  ));
+  $rep_details_level_column_name = civicrm_api3('CustomField', 'getvalue', array(
+    'return' => "column_name",
+    'custom_group_id' => "Representative_Details",
+    'label' => "Level",
+  ));
+  $rep_details_chamber_column_name = civicrm_api3('CustomField', 'getvalue', array(
+    'return' => "column_name",
+    'custom_group_id' => "Representative_Details",
+    'label' => "Chamber",
+  ));
+
+  // Set params for address lookup
+  $addressLocationType = civicrm_api3('Setting', 'getvalue', array('name' => 'addressLocationType'));
+  $address_sql_params = array(
+    1 => array($addressLocationType, 'Integer'),
+    2 => array($limit, 'Integer'),
+  );
 
   //geo_code1 = latitude
   //geo_code2 = longitude
-  $address_params = array(
-    'return' => "contact_id,geo_code_1,geo_code_2",
-    'contact_id' => array('IS NOT NULL' => 1),
-    'location_type_id' => $addressLocationType,
-    'state_province_id' => "$state_id",
-    'country_id' => 1228,
-    'geo_code_1' => array('IS NOT NULL' => 1),
-    'geo_code_2' => array('IS NOT NULL' => 1),
-  );
-	// handle a location type of "Primary".
-	if ($addressLocationType == 0) {
-    unset($address_params['location_type_id']);
-		$address_params['is_primary'] = 1;
+  $address_sql = "
+       SELECT ca.geo_code_1,
+              ca.geo_code_2,
+              ca.contact_id
+         FROM civicrm_address ca
+   INNER JOIN civicrm_contact cc
+           ON ca.contact_id = cc.id
+    LEFT JOIN $rep_details_table_name upper
+           ON ca.contact_id = upper.entity_id
+          AND upper.$rep_details_level_column_name = 'openstates'
+          AND upper.$rep_details_chamber_column_name = 'upper'
+    LEFT JOIN $rep_details_table_name lower
+           ON ca.contact_id = lower.entity_id
+          AND lower.$rep_details_level_column_name = 'openstates'
+          AND lower.$rep_details_chamber_column_name = 'lower'
+        WHERE ca.geo_code_1 IS NOT NULL
+          AND ca.geo_code_2 IS NOT NULL
+          AND ca.country_id = 1228
+          AND ca.state_province_id = $state_id
+          AND cc.is_deceased != 1
+  ";
+  //TODO Including these WHERE clauses will only check contacts without existing OpenStates Rep Details
+  //Updating them is a bit more complicated with the current state of the API. See below.
+  $address_sql .= "
+          AND (upper.id IS NULL OR lower.id IS NULL)
+  ";
+  //Handle a location type of Primary.
+  if ($addressLocationType == 0) {
+    $address_sql .= "
+         AND ca.is_primary = 1
+    ";
+  } else {
+    $address_sql .= "
+          AND ca.location_type_id = %1
+    ";
   }
-  $contact_addresses = civicrm_api3('Address', 'get', $address_params);
-  foreach($contact_addresses['values'] as $address) {
+  //Throttling
+  $address_sql .= "
+        LIMIT %2
+  ";
+
+  $contact_addresses = CRM_Core_DAO::executeQuery($address_sql, $address_sql_params);
+
+  while ($contact_addresses->fetch()) {
 
     $latitude = $longitude = $districts = $contact_id = '';
     
-    $latitude = $address['geo_code_1'];
-    $longitude = $address['geo_code_2'];
+    $latitude = $contact_addresses->geo_code_1;
+    $longitude = $contact_addresses->geo_code_2;
 
     //Assemble the API URL
     $url = "http://openstates.org/api/v1/legislators/geo/?apikey=$apikey&lat=$latitude&long=$longitude";
@@ -244,14 +301,14 @@ function electoral_sf_open_states_districts($state_id) {
     curl_close($ch);
 
     foreach ( $districts as $district ) {
-      $contact_id = $address['contact_id'];
+      $contact_id = $contact_addresses->contact_id;
       $contact_district = $district['district'];
       $contact_chamber = $district['chamber'];
 
       //Need to determine if this is a create or an update, 
       //so need to find is there's a value for the custom data
       //Find Level custom field id number
-      //FIXME Updates to the multi-value custom data sets aren't currently working
+      //TODO Updates to the multi-value custom data sets aren't currently working
       //We're keeping this check in place to avoid duplicate data
       $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
         'return' => "id",

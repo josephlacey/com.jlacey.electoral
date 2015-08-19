@@ -11,41 +11,86 @@
  */ 
 function civicrm_api3_ny_times_districts($params) {
 
-  ny_times_districts();
+  if (isset($params['limit']) && is_numeric($params['limit']) ) {
+    ny_times_districts($params['limit']);
+  } else {
+    ny_times_districts(100);
+  }
   return civicrm_api3_create_success(array(1), array("NY Times Districts API successful."));
 
 }
 
-function ny_times_districts() {
+function ny_times_districts($limit) {
 
-  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'nyTimesAPIKey'));
-  $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'nyTimesAPIKey'));
+
+  // The custom group table name and field column name aren't included because
+  // coming from the API presumably their sanitized AND
+  // Civi quotes the string, so the query returns with a syntax error
+  $rep_details_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
+    'return' => "table_name",
+    'name' => "Representative_Details",
+    'label' => "Level",
+  ));
+  $rep_details_level_column_name = civicrm_api3('CustomField', 'getvalue', array(
+    'return' => "column_name",
+    'custom_group_id' => "Representative_Details",
+    'label' => "Level",
+  ));
+
+  // Set params for address lookup
+  $addressLocationType = civicrm_api3('Setting', 'getvalue', array('name' => 'addressLocationType'));
+  $address_sql_params = array(
+    1 => array($addressLocationType, 'Integer'),
+    2 => array($limit, 'Integer'),
+  );
 
   //geo_code1 = latitude
   //geo_code2 = longitude
-  $address_params = array(
-    'return' => "contact_id,geo_code_1,geo_code_2",
-    'contact_id' => array('IS NOT NULL' => 1),
-    'location_type_id' => $addressLocationType,
-    'state_province_id' => 1031,
-    'country_id' => 1228,
-    'geo_code_1' => array('IS NOT NULL' => 1),
-    'geo_code_2' => array('IS NOT NULL' => 1),
-  );
-  // handle a location type of "Primary".
+  // Assemble address lookup query
+  $address_sql = "
+       SELECT ca.geo_code_1,
+              ca.geo_code_2,
+              ca.contact_id
+         FROM civicrm_address ca
+   INNER JOIN civicrm_contact cc
+           ON ca.contact_id = cc.id
+    LEFT JOIN $rep_details_table_name nytimes
+           ON ca.contact_id = nytimes.entity_id
+          AND nytimes.$rep_details_level_column_name = 'nytimes'
+        WHERE ca.geo_code_1 IS NOT NULL
+          AND ca.geo_code_2 IS NOT NULL
+          AND ca.country_id = 1228
+          AND cc.is_deceased != 1
+  ";
+  //TODO Including these WHERE clauses will only check contacts without an existing Rep Details
+  //Updating them is a bit more complicated. See below.
+  $address_sql .= "
+          AND nytimes.id IS NULL
+  ";
+  //Handle a location type of Primary.
   if ($addressLocationType == 0) {
-    unset($address_params['location_type_id']);
-   $address_params['is_primary'] = 1;
+    $address_sql .= "
+         AND ca.is_primary = 1
+    ";
+  } else {
+    $address_sql .= "
+          AND ca.location_type_id = %1
+    ";
   }
+  //Throttling
+  $address_sql .= "
+        LIMIT %2
+  ";
 
-  $contact_addresses = civicrm_api3('Address', 'get', $address_params);
+  $contact_addresses = CRM_Core_DAO::executeQuery($address_sql, $address_sql_params);
 
-  foreach($contact_addresses['values'] as $address) {
+  while ($contact_addresses->fetch()) {
 
     $latitude = $longitude = $districts = $contact_id = '';
     
-    $latitude = $address['geo_code_1'];
-    $longitude = $address['geo_code_2'];
+    $latitude = $contact_addresses->geo_code_1;
+    $longitude = $contact_addresses->geo_code_2;
 
     //Assemble the API URL
     $url = "https://api.nytimes.com/svc/politics/v2/districts.json?api-key=$apikey&lat=$latitude&lng=$longitude";
@@ -66,7 +111,7 @@ function ny_times_districts() {
     //The query above returns all addresses in NY state
     //Any requests that fall outside New York City return with an error
     if( $districts['status'] == 'OK' ) {
-      $contact_id = $address['contact_id'];
+      $contact_id = $contact_addresses->contact_id;
       foreach ($districts['results'] as $district) {
         if ($district['level'] == 'City Council') {
           $city_council_district = $district['district'];

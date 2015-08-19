@@ -20,7 +20,7 @@ function civicrm_api3_sf_congress_legs($params) {
 
 function electoral_sf_congress_legs($chamber) {
 
-  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
 
   //Assemble the API URL
   $url = "https://congress.api.sunlightfoundation.com/legislators?apikey=$apikey&in_office=true&per_page=all&chamber=$chamber";
@@ -195,54 +195,87 @@ function electoral_sf_congress_legs($chamber) {
 
 function civicrm_api3_sf_congress_districts($params) {
 
-  electoral_sf_congress_districts();
+  if (isset($params['limit']) && is_numeric($params['limit']) ) {
+    electoral_sf_congress_districts($params['limit']);
+  } else {
+    electoral_sf_congress_districts(100);
+  }
   return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Districts successful."));
 
 }
 
-function electoral_sf_congress_districts() {
+function electoral_sf_congress_districts($limit) {
 
-  $apikey = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'sunlightFoundationAPIKey'));
-  $addressLocationType = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'addressLocationType'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
 
-  //geo_code1 = latitude
-  //geo_code2 = longitude
-  /* FIXME throttling doesn't work
-  $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
-    'return' => "id",
+  // The custom group table name and field column name aren't included because
+  // coming from the API presumably their sanitized AND
+  // Civi quotes the string, so the query returns with a syntax error
+  $rep_details_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
+    'return' => "table_name",
+    'name' => "Representative_Details",
+    'label' => "Level",
+  ));
+  $rep_details_level_column_name = civicrm_api3('CustomField', 'getvalue', array(
+    'return' => "column_name",
     'custom_group_id' => "Representative_Details",
     'label' => "Level",
   ));
-  $rep_details_level_field = 'custom_' . $rep_details_level_id;
-  */
-  $address_params = array(
-    'sequential' => 1, 
-    'return' => "contact_id,geo_code_1,geo_code_2", 
-    'geo_code_1' => array('IS NOT NULL' => 1), 
-    'geo_code_2' => array('IS NOT NULL' => 1), 
-    'country_id' => "US", 
-    'location_type_id' => $addressLocationType,
-    //'api.Contact.get' => array(
-      //'sequential' => 1, 
-      //'return' => 'id',
-      //'id' => '$value.id',
-      //"$rep_details_level_field" => array('!=' => 'congress'),
-    //),
-  );
-  // handle a location type of "Primary".
-  if ($addressLocationType == 0) {
-    unset($address_params['location_type_id']);
-   $address_params['is_primary'] = 1;
-  }
-  $contact_addresses = civicrm_api3('Address', 'get', $address_params);
 
-  foreach($contact_addresses['values'] as $address) {
+  // Set params for address lookup
+  $addressLocationType = civicrm_api3('Setting', 'getvalue', array('name' => 'addressLocationType'));
+  $address_sql_params = array(
+    1 => array($addressLocationType, 'Integer'),
+    2 => array($limit, 'Integer'),
+  );
+
+  //geo_code1 = latitude
+  //geo_code2 = longitude
+  // Assemble address lookup query
+  $address_sql = "
+       SELECT ca.geo_code_1,
+              ca.geo_code_2,
+              ca.contact_id
+         FROM civicrm_address ca
+   INNER JOIN civicrm_contact cc
+           ON ca.contact_id = cc.id
+    LEFT JOIN $rep_details_table_name congress
+           ON ca.contact_id = congress.entity_id
+          AND congress.$rep_details_level_column_name = 'congress'
+        WHERE ca.geo_code_1 IS NOT NULL
+          AND ca.geo_code_2 IS NOT NULL
+          AND ca.country_id = 1228
+          AND cc.is_deceased != 1
+  ";
+  //TODO Including these WHERE clauses will only check contacts without an existing Rep Details
+  //Updating them is a bit more complicated. See below.
+  $address_sql .= "
+          AND congress.id IS NULL
+  ";
+  //Handle a location type of Primary.
+  if ($addressLocationType == 0) {
+    $address_sql .= "
+         AND ca.is_primary = 1
+    ";
+  } else {
+    $address_sql .= "
+          AND ca.location_type_id = %1
+    ";
+  }
+  //Throttling
+  $address_sql .= "
+        LIMIT %2
+  ";
+
+  $contact_addresses = CRM_Core_DAO::executeQuery($address_sql, $address_sql_params);
+
+  while ($contact_addresses->fetch()) {
 
     $latitude = $longitude = $districts = $contact_id = '';
     
-    $latitude = $address['geo_code_1'];
-    $longitude = $address['geo_code_2'];
+    $latitude = $contact_addresses->geo_code_1;
+    $longitude = $contact_addresses->geo_code_2;
 
     //Assemble the API URL
     $url = "https://congress.api.sunlightfoundation.com/districts/locate?apikey=$apikey&latitude=$latitude&longitude=$longitude";
@@ -259,8 +292,7 @@ function electoral_sf_congress_districts() {
     curl_close($ch);
 
     if( $districts['count'] == 1 ) {
-      $contact_id = $address['contact_id'];
-      //$contact_state = array_search($districts['results'][0]['state'], $states);
+      $contact_id = $contact_addresses->contact_id;
       $contact_state = $districts['results'][0]['state'];
       $contact_district = $districts['results'][0]['district'];
 
@@ -269,10 +301,15 @@ function electoral_sf_congress_districts() {
       //Find Level custom field id number
       //FIXME Updates to the multi-value custom data sets aren't currently working
       //We're keeping this check in place to avoid duplicate data
+      $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'custom_group_id' => "Representative_Details",
+        'label' => "Level",
+      ));
       $contact_rep_details_exists = civicrm_api3('Contact', 'get', array(
         'return' => "id",
         'id' => $contact_id,
-        "$rep_details_level_field" => "congress",
+        "custom_$rep_details_level_id" => "congress",
       ));
 
       if ($contact_rep_details_exists['count'] == 1) {
@@ -300,14 +337,12 @@ function electoral_sf_congress_districts() {
       } else {
         //Create the CiviCRM Contact
         $contact_rep_details_create = civicrm_api3('CustomValue', 'create', array(
-          'version' => 3,
           'entity_id' => $contact_id,
           'custom_Representative_Details:Level' => 'congress',
           'custom_Representative_Details:States/Provinces' => "$contact_state",
           'custom_Representative_Details:District' => "$contact_district",
         ));
       }
-
     }
   }
 }
