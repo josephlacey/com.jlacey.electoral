@@ -21,7 +21,7 @@
     <ver>4.6</ver>
     <ver>4.7</ver>
   </compatibility>
-  <comments>This modules provide integration to various electoral API's.  Currently supported API's are Sunlight Foundation's Congress and Open States API's and New York Times' Districts API.  It's development has been funded by the Center for Constitional Rights and ACLU of San Diego and Imperial Counties.</comments>
+  <comments>This module provides integration to various electoral API's.  Currently included API's are Sunlight Foundation's Congress and Open States API's and New York Times' Districts API.  It's development has been funded by the Center for Constitional Rights and ACLU of San Diego and Imperial Counties.</comments>
   <civix>
     <namespace>CRM/Electoral</namespace>
   </civix>
