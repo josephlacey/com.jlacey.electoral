@@ -83,6 +83,7 @@ function electoral_sf_congress_legs($chamber) {
       'first_name' => "$leg_first_name",
       'last_name' => "$leg_last_name",
       'do_not_email' => 1,
+      'image_URL' => "https://theunitedstates.io/images/congress/225x275/$leg_id.jpg",
     );
     //Only add the CiviCRM Contact ID as a create param if set   
     if ( $contact_id != '' ) {
