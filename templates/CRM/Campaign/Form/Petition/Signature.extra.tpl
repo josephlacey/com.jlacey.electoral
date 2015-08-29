@@ -14,7 +14,6 @@ jQuery(document).ready(function() {
 
 //Nominatim Request
 function requestNominatim() {
-  //console.log('requestNominatim'); 
 
   //Hide look up button and showing Address look up... user message
   jQuery('#district-lookup').hide();
@@ -29,9 +28,6 @@ function requestNominatim() {
     format: 'json',
     addressdetails: 1
   };
-  //jQuery.each(nominatimOptions, function(key, val) {
-  //  console.log(key + ": " + val);
-  //});
 
   //Make Nominatim request and process results, includes failures
   var nominatim = jQuery.ajax({
@@ -47,7 +43,6 @@ function requestNominatim() {
 
 //Nominatim Response handling 
 function processNominatim(nominatim) { 
-  //console.log('processNominatim'); 
 
   //Hide Address look up... message
   jQuery('#address-request').hide();
@@ -55,8 +50,8 @@ function processNominatim(nominatim) {
   //If the address look up fails, assume the generic city council member
   if (jQuery.isEmptyObject(nominatim)) {
     console.log('nominatim empty'); 
-    //District 0
     //FIXME Using a District 0 seems like it's going to be a problem for at-large state districts
+    //District 0
     //processMember(0);
 
   //Look up returns successful
@@ -111,10 +106,8 @@ function processLatLong(nominatim, key) {
 
   var latitude = nominatim[key]['lat'];
   var longitude = nominatim[key]['lon'];
-  //console.log('latitude, longitude');
-  //console.log(latitude, longitude);
 
-  //Make NY City Council district request
+  //Make district request
   requestDistricts(latitude, longitude);
 }
 
@@ -123,7 +116,7 @@ function requestDistricts(latitude, longitude) {
   //console.log('requestDistricts'); 
 
   //FIXME A custom data field attached to the petition determines this?
-  //FIXME state level isn't working yet.
+  //TODO state level isn't working yet.
   var level = 'federal';
 
   if ( level == 'federal') {
@@ -132,9 +125,9 @@ function requestDistricts(latitude, longitude) {
     var api = 'OpenStates';
   }
 
-  //FIXME Update API key to CCR specific one
-  //FIXME Admin UI field?
-  var apiKey = 'fd2e8ef1c3554b7ebf030670e34e3763';
+  CRM.api3('Setting', 'getvalue', {"name": "sunlightFoundationAPIKey" }).done(function(result) {
+    var apiKey = result;
+  });
 
   if ( api == 'Congress' ) {
     var APIUrl = 'https://congress.api.sunlightfoundation.com/districts/locate?';
@@ -155,8 +148,6 @@ function requestDistricts(latitude, longitude) {
       apikey: apiKey,
     };
   }
-  //console.log(APIUrl);
-  //console.log(APIOptions);
 
   //Make Sunlight Foundation request
   var districts = jQuery.ajax({
@@ -169,6 +160,7 @@ function requestDistricts(latitude, longitude) {
     },
     error: function() {
       console.log(api + ' API lookup error');
+      //FIXME Using a District 0 seems like it's going to be a problem for at-large state districts
       //District 0
       //processMember(0);
     }
@@ -177,9 +169,6 @@ function requestDistricts(latitude, longitude) {
 
 //District API Response handling
 function processDistricts (districts, api) {
-  //console.log('processDistricts');
-  //console.log(districts);
-  //console.log(api);
 
   if ( api == 'Congress' ) {
     //Loop through districts to get City Council
@@ -192,19 +181,20 @@ function processDistricts (districts, api) {
         });
       });
     } else {
-      //If the look up fails, count is 0 or count is more than 1, then ??
-      //FIXME District 0
-      //cityCouncilDistrict = 0;
+      //If the look up fails, count is 0 or count is more than 1, then FIXME
+      //District 0
+      //district = 0;
     }
   
     //Set hidden State field for user, based on user completed State field
+    //FIXME custom fields need to be abstracted
     //jQuery("select[id^='custom_92']").val(jQuery("select[id^='state_province'] > option[selected^='selected']").val());
     jQuery("#custom_92").val(jQuery("#state_province-Primary").val());
   
     //Set hidden District field for user
     jQuery("input[id^='custom_93']").val(district);
   } else if ( api == 'OpenStates' ) {
-    //FIXME multiple reps
+    //TODO multiple reps
   } 
 
   processPetition();
@@ -212,7 +202,6 @@ function processDistricts (districts, api) {
 }
 
 function processPetition() {
-  console.log('processPetition');
 
   jQuery('.crm-petition-activity-profile').after('<table><tr class="petition-recipients"></tr></table>');
 
@@ -225,48 +214,35 @@ function processPetition() {
 }
 
 function getRecipients() {
-  console.log('getRecipients');
-
+  
+  //FIXME custom fields need to be abstracted
   var state = jQuery("select[id^='custom_92']").val();
   var district = jQuery("input[id^='custom_93']").val();
 
   CRM.api3('Contact', 'get', {
     "sequential": 1,
-    "return": "first_name,last_name,external_identifier",
+    "return": "first_name,last_name,external_identifier,image_URL",
     "custom_91":"lower",
     "custom_92": state,
     "custom_93": district
   }).success(function(result) {
     jQuery(result['values']).each(function () {
-      console.log(this);
-      jQuery('.petition-recipients').append('<td><img src="https://theunitedstates.io/images/congress/225x275/' + this['external_identifier'] + '.jpg" /><div>' + this['first_name'] + ' ' + this['last_name'] + "</div></td>");
+      jQuery('.petition-recipients').append('<td><img src="' + this['image_URL'] + '" /><div>' + this['first_name'] + ' ' + this['last_name'] + "</div></td>");
     });
   }); 
 
   CRM.api3('Contact', 'get', {
     "sequential": 1,
-    "return": "first_name,last_name,external_identifier",
+    "return": "first_name,last_name,external_identifier,image_URL",
     "custom_91":"upper",
     "custom_92": state
   }).success(function(result) {
     jQuery(result['values']).each(function () {
-      console.log(this);
-      jQuery('.petition-recipients').append('<td><img src="https://theunitedstates.io/images/congress/225x275/' + this['external_identifier'] + '.jpg" /><div>' + this['first_name'] + ' ' + this['last_name'] + "</div></td>");
+      jQuery('.petition-recipients').append('<td><img src="' + this['image_URL'] + '" /><div>' + this['first_name'] + ' ' + this['last_name'] + "</div></td>");
     });
   }); 
 
 }
 
-//Error handling, for debugging
-function showError( jqXHR, textStatus, errorThrown )  { 
-  console.log('showError');
-  jQuery.each(jqXHR, function(key, error) {
-    console.log(key + ": " + error); 
-  });
-  //console.log(textStatus);
-  jQuery.each(errorThrown, function(key, error) {
-    console.log(key + ": " + error); 
-  });
-} 
 </script>
 {/literal}
