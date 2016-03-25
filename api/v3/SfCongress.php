@@ -294,7 +294,7 @@ function electoral_sf_congress_districts($limit) {
 
     if( $districts['count'] == 1 ) {
       $contact_id = $contact_addresses->contact_id;
-      $contact_state = $districts['results'][0]['state'];
+      $contact_state = array_search($districts['results'][0]['state'], $states);
       $contact_district = $districts['results'][0]['district'];
 
       //Need to determine if this is a create or an update, 
