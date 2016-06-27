@@ -19,7 +19,6 @@ function civicrm_api3_sf_congress_legs($params) {
 }
 
 function electoral_sf_congress_legs($chamber) {
-
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
 
   //Assemble the API URL
@@ -63,6 +62,11 @@ function electoral_sf_congress_legs($chamber) {
     }
 
     //Create or update the CiviCRM Contact
+    $leg_title = $legislator['title'] . '.';
+    $prefix_exist = civicrm_api3('OptionValue', 'get', array('label' => "$leg_title", ));
+    if ($prefix_exist['count'] == 0) {
+      $prefix = civicrm_api3('OptionValue', 'create', array('option_group_id' => 'individual_prefix', 'label' => "$leg_title", ));
+    }
     $leg_first_name = $legislator['first_name'];
     $leg_last_name = $legislator['last_name'];
     $leg_state = array_search($legislator['state'], $states);
@@ -80,6 +84,7 @@ function electoral_sf_congress_legs($chamber) {
     $leg_contact_params = array(
       'external_identifier' => "$leg_id",
       'contact_type' => 'Individual',
+      'prefix_id' => "$leg_title",
       'first_name' => "$leg_first_name",
       'last_name' => "$leg_last_name",
       'do_not_email' => 1,
@@ -161,7 +166,7 @@ function electoral_sf_congress_legs($chamber) {
     }
 
     //Create the Email address
-    //Check if contact has an email addres set, Main location type
+    //Check if contact has an email address set, Main location type
     $leg_email_exist = civicrm_api3('Email', 'get', array(
       'return' => "email",
       'contact_id' => $contact_id,
@@ -175,19 +180,171 @@ function electoral_sf_congress_legs($chamber) {
     }
     if ( $legislator['oc_email'] != NULL ) {
       $leg_email = $legislator['oc_email'];
-      
+
       //Add an updated email address or a new one if none exist, 
       //and set it to primary
-      if ( ( $leg_email_exist['count'] == 1 && $leg_email_exist['values'][$leg_email_exist_id]['email'] != strtolower($leg_email ) ) || 
+      if ( ( $leg_email_exist['count'] == 1 && $leg_email_exist['values'][$leg_email_exist_id]['email'] != strtolower($leg_email ) ) ||
            $leg_email_exist['count'] == 0 ) {
         $leg_email_params = array(
           'contact_id' => $contact_id,
           'location_type_id' => 3,
           'is_primary' => 1,
-          'email' => $leg_email,
+          'email' => "$leg_email",
         );
-      
+
         $leg_email = civicrm_api3('Email', 'create', $leg_email_params);
+      }
+    }
+
+    //Create the Phone number
+    //Check if contact has a phone set, Main location type
+    $leg_phone_exist = civicrm_api3('Phone', 'get', array(
+      'return' => "phone",
+      'contact_id' => $contact_id,
+      'is_primary' => 1,
+      'location_type_id' => 3,
+    ));
+
+    //If there is an existing phone number, set the id for comparison
+    if ($leg_phone_exist['count'] > 0) {
+      $leg_phone_exist_id = $leg_phone_exist['id'];
+    }
+    if ( $legislator['phone'] != NULL ) {
+      $leg_phone = $legislator['phone'];
+
+      //Add an updated phone number or a new one if none exist,
+      //and set it to primary
+      if ( ( $leg_phone_exist['count'] == 1 && $leg_phone_exist['values'][$leg_phone_exist_id]['phone'] != strtolower($leg_phone ) ) ||
+           $leg_phone_exist['count'] == 0 ) {
+        $leg_phone_params = array(
+          'contact_id' => $contact_id,
+          'location_type_id' => 3,
+          'phone_type_id' => 1,
+          'is_primary' => 1,
+          'phone' => "$leg_phone",
+        );
+
+        $leg_phone = civicrm_api3('Phone', 'create', $leg_phone_params);
+      }
+    }
+
+    //Create the Address address
+    //Check if contact has an address set, Main location type
+    $leg_address_exist = civicrm_api3('Address', 'get', array(
+      'return' => "street_address",
+      'contact_id' => $contact_id,
+      'is_primary' => 1,
+    ));
+
+    //If there is an existing address address, set the id for comparison
+    if ($leg_address_exist['count'] > 0) {
+      $leg_address_exist_id = $leg_address_exist['id'];
+    }
+    if ( $legislator['office'] != NULL ) {
+      $leg_address = $legislator['office'];
+
+      //Add an updated address address or a new one if none exist,
+      //and set it to primary
+      if ( ( $leg_address_exist['count'] == 1 && $leg_address_exist['values'][$leg_address_exist_id]['street_address'] != $leg_address ) ||
+           $leg_address_exist['count'] == 0 ) {
+        $leg_address_params = array(
+          'contact_id' => $contact_id,
+          'location_type_id' => 3,
+          'is_primary' => 1,
+          'street_address' => "$leg_address",
+          'city' => 'Washington',
+          'state_province_id' => 1050,
+          'postal_code' => '20510',
+        );
+
+        $leg_address = civicrm_api3('Address', 'create', $leg_address_params);
+      }
+    }
+
+    //Create website
+    //Check if contact has a phone set, Main location type
+    $leg_website_exist = civicrm_api3('Website', 'get', array(
+      'return' => "url",
+      'contact_id' => $contact_id,
+      'website_type_id' => 2
+    ));
+
+    //If there is an existing website, set the id for comparison
+    if ($leg_website_exist['count'] > 0) {
+      $leg_website_exist_id = $leg_website_exist['id'];
+    }
+    if ( $legislator['website'] != NULL ) {
+      $leg_website = $legislator['website'];
+
+      //Add an updated website or a new one if none exist,
+      //and set it to primary
+      if ( ( $leg_website_exist['count'] == 1 && $leg_website_exist['values'][$leg_website_exist_id]['url'] != $leg_website ) ||
+           $leg_website_exist['count'] == 0 ) {
+        $leg_website_params = array(
+          'contact_id' => $contact_id,
+          'url' => "$leg_website",
+          'website_type_id' => 2
+        );
+
+        $leg_website = civicrm_api3('Website', 'create', $leg_website_params);
+      }
+    }
+
+    //Create Facebook
+    //Check if contact has a phone set, Main location type
+    $leg_facebook_exist = civicrm_api3('Website', 'get', array(
+      'return' => "url",
+      'contact_id' => $contact_id,
+      'website_type_id' => 3
+    ));
+
+    //If there is an existing facebook, set the id for comparison
+    if ($leg_facebook_exist['count'] > 0) {
+      $leg_facebook_exist_id = $leg_facebook_exist['id'];
+    }
+    if ( $legislator['facebook_id'] != NULL ) {
+      $leg_facebook = 'https://facebook.com/' . $legislator['facebook_id'];
+
+      //Add an updated facebook or a new one if none exist,
+      //and set it to primary
+      if ( ( $leg_facebook_exist['count'] == 1 && $leg_facebook_exist['values'][$leg_facebook_exist_id]['url'] != $leg_facebook) ||
+           $leg_facebook_exist['count'] == 0 ) {
+        $leg_facebook_params = array(
+          'contact_id' => $contact_id,
+          'url' => "$leg_facebook",
+          'website_type_id' => 3
+        );
+
+        $leg_facebook = civicrm_api3('Website', 'create', $leg_facebook_params);
+      }
+    }
+
+    //Create Twitter
+    //Check if contact has a phone set, Main location type
+    $leg_twitter_exist = civicrm_api3('Website', 'get', array(
+      'return' => "url",
+      'contact_id' => $contact_id,
+      'website_type_id' => 11
+    ));
+
+    //If there is an existing twitter, set the id for comparison
+    if ($leg_twitter_exist['count'] > 0) {
+      $leg_twitter_exist_id = $leg_twitter_exist['id'];
+    }
+    if ( $legislator['twitter_id'] != NULL ) {
+      $leg_twitter = 'https://twitter.com/' . $legislator['twitter_id'];
+
+      //Add an updated twitter or a new one if none exist,
+      //and set it to primary
+      if ( ( $leg_twitter_exist['count'] == 1 && $leg_twitter_exist['values'][$leg_twitter_exist_id]['url'] != $leg_twitter) ||
+           $leg_twitter_exist['count'] == 0 ) {
+        $leg_twitter_params = array(
+          'contact_id' => $contact_id,
+          'url' => "$leg_twitter",
+          'website_type_id' => 11
+        );
+
+        $leg_twitter = civicrm_api3('Website', 'create', $leg_twitter_params);
       }
     }
   }
