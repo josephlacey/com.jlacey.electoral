@@ -186,8 +186,8 @@ function processDistricts (districts, api) {
       //district = 0;
     }
   
-    //Set hidden State field for user, based on user completed State field
     //FIXME custom fields need to be abstracted
+    //Set hidden State field for user, based on user completed State field
     //jQuery("select[id^='custom_92']").val(jQuery("select[id^='state_province'] > option[selected^='selected']").val());
     jQuery("#custom_92").val(jQuery("#state_province-Primary").val());
   
