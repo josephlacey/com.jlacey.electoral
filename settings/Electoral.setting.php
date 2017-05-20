@@ -14,7 +14,19 @@ return array(
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => 'Sunlight Foundation API Key',
-    'help_text' => 'Add your registered Sunlight Foundation API Key for Congress and Open States API calls.',
+    'help_text' => 'Add your registered Sunlight Foundation API Key for Congress API calls.',
+  ),
+  'openStatesAPIKey' => array(
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
+    'name' => 'openStatesAPIKey',
+    'type' => 'Text',
+    'default' => '',
+    'add' => '4.7',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'Open States API Key',
+    'help_text' => 'Add your registered Open States API Key for Open States API calls.',
   ),
   'addressLocationType' => array(
     'group_name' => 'Electoral API settings',
@@ -40,17 +52,17 @@ return array(
     'description' => 'States included in Open States API calls',
     'help_text' => 'Add states to include in Open States API scheduled jobs',
   ),
-  'nyTimesAPIKey' => array(
+  'googleCivicInformationAPIKey' => array(
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
-    'name' => 'nyTimesAPIKey',
+    'name' => 'googleCivicInformationAPIKey',
     'type' => 'Text',
     'default' => '',
     'add' => '4.7',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => 'NY Times API Key',
-    'help_text' => 'Add your registered NY Times API Key for Districts API calls',
+    'description' => 'Google Civic API Key',
+    'help_text' => 'Add your registered Google Civic Information API Key for Open Civic Data API calls',
   ),
 );
 
