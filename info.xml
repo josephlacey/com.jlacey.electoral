@@ -9,19 +9,19 @@
     <email>joseph@palantetech.coop</email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">http://git.palantetech.coop/palante/civicrm/extensions/coop.palantetech.electoral/</url>
+    <url desc="Main Extension Page">https://github.com/josephlacey/coop.palantetech.electoral</url>
     <url desc="Documentation">https://hq.palantetech.coop/projects/electoral-api/wiki</url>
     <url desc="Support">https://hq.palantetech.coop/projects/electoral-api/issues/new</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2015-03-02</releaseDate>
   <version>1.0</version>
-  <develStage>beta</develStage>
+  <develStage>alpha</develStage>
   <compatibility>
     <ver>4.6</ver>
     <ver>4.7</ver>
   </compatibility>
-  <comments>This module provides integration to various electoral API's.  Currently included API's are Sunlight Foundation's Congress and Open States API's and New York Times' Districts API.  It's development has been funded by the Center for Constitional Rights and ACLU of San Diego and Imperial Counties.</comments>
+  <comments>This module provides integration to various electoral API's.  Currently included API's are Sunlight Foundation's Congress API and the Open States API.  It's development has been funded by the Center for Constitional Rights and ACLU of San Diego and Imperial Counties.</comments>
   <civix>
     <namespace>CRM/Electoral</namespace>
   </civix>
