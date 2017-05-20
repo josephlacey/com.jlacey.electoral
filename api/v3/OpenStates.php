@@ -26,7 +26,6 @@ function electoral_sf_open_states_reps($chamber, $state) {
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'openStatesAPIKey'));
 
   //Assemble the API URL
-  //Unfortunately HTTPS isn't supported currently
   $url = "https://openstates.org/api/v1/legislators/?apikey=$apikey&active=true&per_page=all&chamber=$chamber&state=$state";
 
   //Intitalize curl
