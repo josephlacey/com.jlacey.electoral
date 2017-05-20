@@ -27,7 +27,7 @@ function electoral_sf_open_states_reps($chamber, $state) {
 
   //Assemble the API URL
   //Unfortunately HTTPS isn't supported currently
-  $url = "http://openstates.org/api/v1/legislators/?apikey=$apikey&active=true&per_page=all&chamber=$chamber&state=$state";
+  $url = "https://openstates.org/api/v1/legislators/?apikey=$apikey&active=true&per_page=all&chamber=$chamber&state=$state";
 
   //Intitalize curl
   $ch = curl_init();
@@ -287,7 +287,7 @@ function electoral_sf_open_states_districts($limit, $state_id) {
     $longitude = $contact_addresses->geo_code_2;
 
     //Assemble the API URL
-    $url = "http://openstates.org/api/v1/legislators/geo/?apikey=$apikey&lat=$latitude&long=$longitude";
+    $url = "https://openstates.org/api/v1/legislators/geo/?apikey=$apikey&lat=$latitude&long=$longitude";
 
     //Intitalize curl
     $ch = curl_init();
