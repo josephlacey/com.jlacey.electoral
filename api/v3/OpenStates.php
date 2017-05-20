@@ -18,12 +18,12 @@ function civicrm_api3_sf_open_states_reps($params) {
     electoral_sf_open_states_reps('lower', "$state_abbr");
   }
   
-  return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Representatives successful."));
+  return civicrm_api3_create_success(array(1), array("Open States API - Representatives successful."));
 }
 
 function electoral_sf_open_states_reps($chamber, $state) {
 
-  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'openStatesAPIKey'));
 
   //Assemble the API URL
   //Unfortunately HTTPS isn't supported currently
@@ -200,13 +200,13 @@ function civicrm_api3_sf_open_states_districts($params) {
       electoral_sf_open_states_districts(100, $state_id);
     }
   }
-  return civicrm_api3_create_success(array(1), array("Sunlight Foundation Open States API - Districts successful."));
+  return civicrm_api3_create_success(array(1), array("Open States API - Districts successful."));
 
 }
 
 function electoral_sf_open_states_districts($limit, $state_id) {
 
-  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'openStatesAPIKey'));
 
   // The custom group table name and field column names aren't included because
   // coming from the API presumably their sanitized AND
@@ -253,6 +253,7 @@ function electoral_sf_open_states_districts($limit, $state_id) {
           AND lower.$rep_details_chamber_column_name = 'lower'
         WHERE ca.geo_code_1 IS NOT NULL
           AND ca.geo_code_2 IS NOT NULL
+          AND ca.street_address IS NOT NULL
           AND ca.country_id = 1228
           AND ca.state_province_id = $state_id
           AND cc.is_deceased != 1

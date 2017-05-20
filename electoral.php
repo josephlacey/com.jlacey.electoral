@@ -76,10 +76,10 @@ function electoral_civicrm_install() {
     //OpenStates API
     $openstates_job_params = array(
       'sequential' => 1,
-      'name'          => 'Sunlight Foundation Open States API - Representatives',
-      'description'   => 'Creates state representative contacts via the Sunlight Foundation Open States API',
+      'name'          => 'Open States API - Representatives',
+      'description'   => 'Creates state representative contacts via the Open States API',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'SfOpenStates',
+      'api_entity'    => 'openStates',
       'api_action'    => 'reps',
       'is_active'     => 0,
     );
@@ -88,28 +88,15 @@ function electoral_civicrm_install() {
     //Contact state districts
     $openstates_districts_job_params = array(
       'sequential' => 1,
-      'name'          => 'Sunlight Foundation Open States API - Districts',
+      'name'          => 'Open States API - Districts',
       'description'   => 'Adds state representative districts to contacts',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'SfOpenStates',
+      'api_entity'    => 'openStates',
       'api_action'    => 'districts',
       'parameters'    => 'limit=100',
       'is_active'     => 0,
     );
     $openstates_districts_job = civicrm_api3('job', 'create', $openstates_districts_job_params);
-
-    //Contact NY City Council districts
-    $nytimes_districts_job_params = array(
-      'sequential' => 1,
-      'name'          => 'NY Times Districts API',
-      'description'   => 'Adds New York City Council districts to contacts',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'NyTimes',
-      'api_action'    => 'districts',
-      'parameters'    => 'limit=100',
-      'is_active'     => 0,
-    );
-    $nytimes_districts_job = civicrm_api3('job', 'create', $nytimes_districts_job_params);
 
     return _electoral_civix_civicrm_install();
 }
@@ -123,21 +110,21 @@ function electoral_civicrm_uninstall() {
   //Deletes Sunlight Foundation Jobs
   $sunlight_jobs = civicrm_api3('Job', 'get', array(
     'return' => "id",
-    'name' => array('LIKE' => "Sunlight Foundation%"),
+    'name' => array('LIKE' => "Sunlight Foundation Congress API%"),
   ));
 
   foreach ($sunlight_jobs['values'] as $sunlight_job) {
     $sunlight_job_delete = civicrm_api3('job', 'delete', array('id' => $sunlight_job['id'] ));
   }
 
-  //Deletes NY Times Job
-  $ny_times_jobs = civicrm_api3('Job', 'get', array(
+  //Deletes Open States Job
+  $open_states_jobs = civicrm_api3('Job', 'get', array(
     'return' => "id",
-    'name' => array('LIKE' => "NY Times Districts API"),
+    'name' => array('LIKE' => "Open States API%"),
   ));
 
-  foreach ($ny_times_jobs['values'] as $ny_times_job) {
-    $ny_times_job_delete = civicrm_api3('job', 'delete', array('id' => $ny_times_job['id'] ));
+  foreach ($open_states_jobs['values'] as $open_states_job) {
+    $open_states_job_delete = civicrm_api3('job', 'delete', array('id' => $open_states_job['id'] ));
   }
 
   return _electoral_civix_civicrm_uninstall();
