@@ -20,6 +20,18 @@ function civicrm_api3_sf_congress_legs($params) {
 
 function electoral_sf_congress_legs($chamber) {
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
+  $dem_tag_exist = civicrm_api3('Tag', 'get', array('name' => "Democrat",));
+  if ($dem_tag_exist['count'] == 0) {
+    $dem_tag = civicrm_api3('Tag', 'create', array('name' => "Democrat",));
+  }
+  $rep_tag_exist = civicrm_api3('Tag', 'get', array('name' => "Republican",));
+  if ($rep_tag_exist['count'] == 0) {
+    $rep_tag = civicrm_api3('Tag', 'create', array('name' => "Republican",));
+  }
+  $ind_tag_exist = civicrm_api3('Tag', 'get', array('name' => "Independent",));
+  if ($ind_tag_exist['count'] == 0) {
+    $ind_tag = civicrm_api3('Tag', 'create', array('name' => "Independent",));
+  }
 
   //Assemble the API URL
   $url = "https://congress.api.sunlightfoundation.com/legislators?apikey=$apikey&in_office=true&per_page=all&chamber=$chamber";
@@ -346,6 +358,19 @@ function electoral_sf_congress_legs($chamber) {
 
         $leg_twitter = civicrm_api3('Website', 'create', $leg_twitter_params);
       }
+    }
+
+    //Tag the legislator with their party
+    switch ($legislator['party']) {
+      case 'D':
+        $result = civicrm_api3('EntityTag', 'create', array('entity_id' => $contact_id,'tag_id' => "Democrat",));
+        break;
+      case 'I':
+        $result = civicrm_api3('EntityTag', 'create', array('entity_id' => $contact_id,'tag_id' => "Independent",));
+        break;
+      case 'R':
+        $result = civicrm_api3('EntityTag', 'create', array('entity_id' => $contact_id,'tag_id' => "Republican",));
+        break;
     }
   }
   CRM_Core_Error::debug_var("Number of $chamber legislators created", $leg_count);
