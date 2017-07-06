@@ -11,14 +11,16 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   protected $_settings = array(
     'sunlightFoundationAPIKey' => 'Electoral API settings',
+    'openStatesAPIKey' => 'Electoral API settings',
     'addressLocationType' => 'Electoral API settings',
     'includedOpenStates' => 'Electoral API settings',
-    'nyTimesAPIKey' => 'Electoral API settings',
+    'googleCivicInformationAPIKey' => 'Electoral API settings',
   );
 
   function buildQuickForm() {
 
     $this->add('text', 'sunlightFoundationAPIKey', ts('Sunlight Foundation API key'), NULL);
+    $this->add('text', 'openStatesAPIKey', ts('Open States API key'), NULL);
 		$this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
 		$this->_location_types = array('Primary') + $this->_location_types;
     $this->add('select', 'addressLocationType', ts('Address location for district lookup.'), 
@@ -27,7 +29,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     $this->add('select', 'includedOpenStates', ts('States included in Open States API calls'), 
       CRM_Core_PseudoConstant::stateProvince(), FALSE, array('multiple' => 'multiple', 'class' => 'crm-select2')
     );
-    $this->add('text', 'nyTimesAPIKey', ts('NY Times API Key'), NULL);
+    $this->add('text', 'googleCivicInformationAPIKey', ts('Google Civic Information API Key'), NULL);
     $this->addButtons(array(
       array(
         'type' => 'submit',
