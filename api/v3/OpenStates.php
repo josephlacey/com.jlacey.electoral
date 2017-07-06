@@ -9,19 +9,19 @@
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */ 
-function civicrm_api3_sf_open_states_reps($params) {
+function civicrm_api3_open_states_reps($params) {
 
   $open_states = civicrm_api3('Setting', 'getvalue', array('name' => 'includedOpenStates'));
   foreach ($open_states as $state_id) {
     $state_abbr = CRM_Core_PseudoConstant::stateProvinceAbbreviation($state_id);
-    electoral_sf_open_states_reps('upper', "$state_abbr");
-    electoral_sf_open_states_reps('lower', "$state_abbr");
+    electoral_open_states_reps('upper', "$state_abbr");
+    electoral_open_states_reps('lower', "$state_abbr");
   }
   
   return civicrm_api3_create_success(array(1), array("Open States API - Representatives successful."));
 }
 
-function electoral_sf_open_states_reps($chamber, $state) {
+function electoral_open_states_reps($chamber, $state) {
 
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'openStatesAPIKey'));
 
@@ -189,21 +189,21 @@ function electoral_sf_open_states_reps($chamber, $state) {
   CRM_Core_Error::debug_var("Number of $state $chamber chamber representatives created", $rep_count);
 }
 
-function civicrm_api3_sf_open_states_districts($params) {
+function civicrm_api3_open_states_districts($params) {
 
   $open_states = civicrm_api3('Setting', 'getvalue', array('name' => 'includedOpenStates'));
   foreach ($open_states as $state_id) {
     if (isset($params['limit']) && is_numeric($params['limit']) ) {
-      electoral_sf_open_states_districts($params['limit'], $state_id);
+      electoral_open_states_districts($params['limit'], $state_id);
     } else {
-      electoral_sf_open_states_districts(100, $state_id);
+      electoral_open_states_districts(100, $state_id);
     }
   }
   return civicrm_api3_create_success(array(1), array("Open States API - Districts successful."));
 
 }
 
-function electoral_sf_open_states_districts($limit, $state_id) {
+function electoral_open_states_districts($limit, $state_id) {
 
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'openStatesAPIKey'));
 
