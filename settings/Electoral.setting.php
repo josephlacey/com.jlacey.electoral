@@ -4,17 +4,17 @@
  * Settings metadata file
  */
 return array(
-  'sunlightFoundationAPIKey' => array(
+  'proPublicaCongressAPIKey' => array(
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
-    'name' => 'sunlightFoundationAPIKey',
+    'name' => 'proPublicaCongressAPIKey',
     'type' => 'Text',
     'default' => '',
     'add' => '4.7',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => 'Sunlight Foundation API Key',
-    'help_text' => 'Add your registered Sunlight Foundation API Key for Congress API calls.',
+    'description' => 'ProPublica Congress API Key',
+    'help_text' => 'Add your registered ProPublica Congress API Key for Congress API calls.',
   ),
   'openStatesAPIKey' => array(
     'group_name' => 'Electoral API settings',

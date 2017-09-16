@@ -10,7 +10,7 @@
 class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   protected $_settings = array(
-    'sunlightFoundationAPIKey' => 'Electoral API settings',
+    'proPublicaCongressAPIKey' => 'Electoral API settings',
     'openStatesAPIKey' => 'Electoral API settings',
     'addressLocationType' => 'Electoral API settings',
     'includedOpenStates' => 'Electoral API settings',
@@ -19,7 +19,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   function buildQuickForm() {
 
-    $this->add('text', 'sunlightFoundationAPIKey', ts('Sunlight Foundation API key'), NULL);
+    $this->add('text', 'proPublicaCongressAPIKey', ts('ProPublica Congress API key'), NULL);
     $this->add('text', 'openStatesAPIKey', ts('Open States API key'), NULL);
 		$this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
 		$this->_location_types = array('Primary') + $this->_location_types;

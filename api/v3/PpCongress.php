@@ -1,7 +1,7 @@
 <?php 
 
 /**
- * Sunlight Foundation Congress API
+ * ProPublica Congress API
  *
  * @param array $params
  * @return array API result descriptor
@@ -9,17 +9,17 @@
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */ 
-function civicrm_api3_sf_congress_legs($params) {
+function civicrm_api3_pp_congress_legs($params) {
 
-  electoral_sf_congress_legs('senate');
-  electoral_sf_congress_legs('house');
+  electoral_pp_congress_legs('senate');
+  electoral_pp_congress_legs('house');
   
-  return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Legislators successful."));
+  return civicrm_api3_create_success(array(1), array("ProPublica Congress API - Legislators successful."));
 
 }
 
-function electoral_sf_congress_legs($chamber) {
-  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
+function electoral_pp_congress_legs($chamber) {
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'proPublicaCongressAPIKey'));
   $dem_tag_exist = civicrm_api3('Tag', 'get', array('name' => "Democrat",));
   if ($dem_tag_exist['count'] == 0) {
     $dem_tag = civicrm_api3('Tag', 'create', array('name' => "Democrat",));
@@ -34,10 +34,11 @@ function electoral_sf_congress_legs($chamber) {
   }
 
   //Assemble the API URL
-  $url = "https://congress.api.sunlightfoundation.com/legislators?apikey=$apikey&in_office=true&per_page=all&chamber=$chamber";
+  $url = "https://api.propublica.org/congress/v1/115/$chamber/members.json";
 
   //Intitalize curl
   $ch = curl_init();
+  curl_setopt($ch, CURLOPT_HTTPHEADER, "X-API-Key: $apikey");
   curl_setopt($ch, CURLOPT_URL, $url);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 
@@ -60,9 +61,9 @@ function electoral_sf_congress_legs($chamber) {
     $leg_email_params = $leg_email = $leg_email_exist = $leg_email_exist_id = '';
 
 
-    //Use the Sunlight Bio Guide ID as the external ID
+    //Use the ProPublica ID as the external ID
     //and find if legislator exists already.
-    $leg_id = $legislator['bioguide_id'];
+    $leg_id = $legislator['id'];
 
     $civicrm_contact_id = civicrm_api3('Contact', 'get', array(
       'return' => 'id',
@@ -376,20 +377,20 @@ function electoral_sf_congress_legs($chamber) {
   CRM_Core_Error::debug_var("Number of $chamber legislators created", $leg_count);
 }
 
-function civicrm_api3_sf_congress_districts($params) {
+function civicrm_api3_pp_congress_districts($params) {
 
   if (isset($params['limit']) && is_numeric($params['limit']) ) {
-    electoral_sf_congress_districts($params['limit']);
+    electoral_pp_congress_districts($params['limit']);
   } else {
-    electoral_sf_congress_districts(100);
+    electoral_pp_congress_districts(100);
   }
-  return civicrm_api3_create_success(array(1), array("Sunlight Foundation Congress API - Districts successful."));
+  return civicrm_api3_create_success(array(1), array("ProPublica Congress API - Districts successful."));
 
 }
 
-function electoral_sf_congress_districts($limit) {
+function electoral_pp_congress_districts($limit) {
 
-  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'sunlightFoundationAPIKey'));
+  $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'proPublicaCongressAPIKey'));
   $states = CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation');
 
   // The custom group table name and field column name aren't included because

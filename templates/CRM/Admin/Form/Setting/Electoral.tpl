@@ -2,10 +2,10 @@
 
 <div class="crm-block crm-form-block crm-electroal-api-form-block">
   <table class="form-layout-compressed">
-       <tr class="crm-electoral-api-form-block-sunlight-foundation-api-key">
-           <td>{$form.sunlightFoundationAPIKey.label}</td>
-           <td>{$form.sunlightFoundationAPIKey.html|crmAddClass:huge}<br />
-           <span class="description">{ts}Enter your Sunlight Foundation API Key.  <a href="http://sunlightfoundation.com/api/accounts/register/" target="_blank">Register at the Sunlight Foundation</a> to obtain a key.{/ts}</span></td>
+       <tr class="crm-electoral-api-form-block-propublica-congress-api-key">
+           <td>{$form.proPublicaCongressAPIKey.label}</td>
+           <td>{$form.proPublicaCongressAPIKey.html|crmAddClass:huge}<br />
+           <span class="description">{ts}Enter your ProPublica Congress API Key.  <a href="https://www.propublica.org/datastore/api/propublica-congress-api" target="_blank">Register at ProPublica's Data Store</a> to obtain a key.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-open-states-api-key">
            <td>{$form.openStatesAPIKey.label}</td>

@@ -51,10 +51,10 @@ function electoral_civicrm_install() {
     //Congress API
     $congress_job_params = array(
       'sequential' => 1,
-      'name'          => 'Sunlight Foundation Congress API - Legislators',
-      'description'   => 'Creates US legislator contacts via the Sunlight Foundation Congress API',
+      'name'          => 'ProPublica Congress API - Legislators',
+      'description'   => 'Creates US legislator contacts via the ProPublica Congress API',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'SfCongress',
+      'api_entity'    => 'PpCongress',
       'api_action'    => 'legs',
       'is_active'     => 0,
     );
@@ -63,10 +63,10 @@ function electoral_civicrm_install() {
     //Contact US districts
     $congress_districts_job_params = array(
       'sequential' => 1,
-      'name'          => 'Sunlight Foundation Congress API - Districts',
-      'description'   => 'Adds US legislative districts to contacts',
+      'name'          => 'ProPublica Congress API - Districts',
+      'description'   => 'Adds US legislative districts to contacts via the ProPublica Congress API',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'SfCongress',
+      'api_entity'    => 'PpCongress',
       'api_action'    => 'districts',
       'parameters'    => 'limit=100',
       'is_active'     => 0,
@@ -108,13 +108,12 @@ function electoral_civicrm_install() {
  */
 function electoral_civicrm_uninstall() {
   //Deletes Sunlight Foundation Jobs
-  $sunlight_jobs = civicrm_api3('Job', 'get', array(
+  $propublica_jobs = civicrm_api3('Job', 'get', array(
     'return' => "id",
-    'name' => array('LIKE' => "Sunlight Foundation Congress API%"),
+    'name' => array('LIKE' => "ProPublica Congress API%"),
   ));
 
-  foreach ($sunlight_jobs['values'] as $sunlight_job) {
-    $sunlight_job_delete = civicrm_api3('job', 'delete', array('id' => $sunlight_job['id'] ));
+  foreach ($propublica_jobs['values'] as $propublica_job) {
   }
 
   //Deletes Open States Job
