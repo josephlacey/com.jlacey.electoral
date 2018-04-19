@@ -1,7 +1,7 @@
 <?php 
 
 /**
- * NY Times API
+ * Google Civic Information API
  *
  * @param array $params
  * @return array API result descriptor
@@ -12,16 +12,25 @@
 function civicrm_api3_google_civic_information_districts($params) {
 
   if (isset($params['limit']) && is_numeric($params['limit']) ) {
-    google_civic_information_districts($params['limit']);
+    $result = google_civic_information_districts($params['limit']);
   } else {
-    google_civic_information_districts(100);
+    $result = google_civic_information_districts(100);
   }
-  return civicrm_api3_create_success(array(1), array("Google Civic Informatin API successful."));
+
+  if (isset($result['error'])) {
+    $reason = $result['error']['errors'][0]['reason'];
+    $code = $result['error']['code'];
+    $message = $result['error']['message'];
+    return civicrm_api3_create_error("$message ($code): $reason");
+  } else {
+    return civicrm_api3_create_success("$result");
+  }
 
 }
 
 function google_civic_information_districts($limit) {
 
+  $addresses_districted = 0;
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'googleCivicInformationAPIKey'));
 
   // The custom group table name and field column name aren't included because
@@ -49,7 +58,7 @@ function google_civic_information_districts($limit) {
   $address_sql = "
        SELECT ca.street_address,
               ca.city,
-              ca.state
+              ca.state_province_id,
               ca.contact_id
          FROM civicrm_address ca
    INNER JOIN civicrm_contact cc
@@ -59,15 +68,15 @@ function google_civic_information_districts($limit) {
           AND civicinfo.$rep_details_level_column_name = 'congress'
         WHERE ca.street_address IS NOT NULL
           AND ca.city IS NOT NULL
-          AND ca.state IS NOT NULL
+          AND ca.state_province_id IS NOT NULL
           AND ca.country_id = 1228
           AND cc.is_deceased != 1
+          AND cc.is_deleted != 1
   ";
-  //TODO Including these WHERE clauses will only check contacts without an existing Rep Details
-  //Updating them is a bit more complicated. See below.
-  $address_sql .= "
-          AND civicinfo.id IS NULL
-  ";
+  //TODO Include a WHERE clause to only check recently updated addresses.
+  //$address_sql .= "
+  //        AND civicinfo.id IS NULL
+  //";
   //Handle a location type of Primary.
   if ($addressLocationType == 0) {
     $address_sql .= "
@@ -89,14 +98,14 @@ function google_civic_information_districts($limit) {
 
     $street_address = $city = $state = $postal_code = $districts = $contact_id = '';
     
-    $street_addres = rawurlencode($contact_address->street_address);
-    $city = rawurlencode($contact_address->city);
-    $state = $contact_address->state;
+    $street_address = rawurlencode($contact_addresses->street_address);
+    $city = rawurlencode($contact_addresses->city);
+    $state = CRM_Core_PseudoConstant::stateProvinceAbbreviation($contact_addresses->state_province_id);
 
     //Assemble the API URL
     //$url = "https://api.opencivicdata.org/divisions/?apikey=$apikey&";
     $url = "https://www.googleapis.com/civicinfo/v2/representatives?key=$apikey&address=$street_address%20$city%20$state";
-    CRM_Core_Error::debug_var('url', $url);
+    //CRM_Core_Error::debug_var('url', $url);
 
     //Intitalize curl
     $verifySSL = civicrm_api('Setting', 'getvalue', array('version' => 3, 'name' => 'verifySSL'));
@@ -107,58 +116,73 @@ function google_civic_information_districts($limit) {
 
     //Get results from API and decode the JSON
     $districts = json_decode(curl_exec($ch), TRUE);
+    dsm($districts, 'districts');
 
     //Close curl
     curl_close($ch);
 
-    CRM_Core_Error::debug_var('districts', $districts);
-    if( $districts['status'] == 'OK' ) {
+    if ( isset($districts['error']) ) {
+      return $districts;
+    } else {
       $contact_id = $contact_addresses->contact_id;
-      foreach ($districts['results'] as $district) {
-        if ($district['level'] == 'City Council') {
-          $city_council_district = $district['district'];
-          
-          //Need to determine if this is a create or an update, 
-          //so need to find is there's a value for the custom data
-          //Find Level custom field id number
-          //FIXME Updates to the multi-value custom data sets aren't currently working
-          //We're keeping this check in place to avoid duplicate data
-          $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
-            'return' => "id",
-            'custom_group_id' => "Representative_Details",
-            'label' => "Level",
-          ));
-          $rep_details_level_field = 'custom_' . $rep_details_level_id;
-          $contact_rep_details_exists = civicrm_api3('Contact', 'get', array(
-            'return' => "id",
-            'id' => $contact_id,
-            "$rep_details_level_field" => "city",
-          ));
-
+      foreach ($districts['divisions'] as $ocdId => $name) {
+        $ocdLevels = explode('/', substr($ocdId, 13));
+        $levels = array();
+        foreach( $ocdLevels as $ocdLevel ) {
+          $levels[strstr($ocdLevel, ':', TRUE)] = substr(strstr($ocdLevel, ':'), 1);
+        }
+        if ( isset($levels['cd']) ) {
+          $cd = $levels['cd'];
+          //Check if this level exists already
+          $contact_rep_details_exists = rep_details_exists($contact_id, 'congress');
           if ($contact_rep_details_exists['count'] == 1) {
-            /*
-            $rep_details_district_id = civicrm_api3('CustomField', 'getvalue', array(
-              'return' => "id",
-              'custom_group_id' => "Representative_Details",
-              'label' => "District",
-            ));
-            $rep_details_district_field = 'custom_' . $rep_details_district_id;
-            $contact_rep_details_update = civicrm_api3('Contact', 'create', array(
-              'id' => $contact_id,
-              'contact_type' => "Individual",
-              "$rep_details_level_field" => "city",
-              "$rep_details_district_field" => "$city_council_district",
-            ));
-            */
-          } else {
+            //Get the custom value set id
+            $rep_details_table_name_id = rep_details_table_name_id();
+            $rep_details_id = $contact_rep_details_exists['values'][$contact_id][$rep_details_table_name_id];
+            //Update
             $contact_rep_details_update = civicrm_api3('CustomValue', 'create', array(
               'entity_id' => $contact_id,
-              'custom_Representative_Details:Level' => 'city',
-              'custom_Representative_Details:District' => "$city_council_district",
+              "custom_Representative_Details:Level:$rep_details_id" => "congress",
+              "custom_Representative_Details:States/Provinces:$rep_details_id" => "$contact_addresses->state_province_id",
+              "custom_Representative_Details:District:$rep_details_id" => "$cd",
+            ));
+          } else {
+            //Create
+            $contact_rep_details_create = civicrm_api3('CustomValue', 'create', array(
+              'entity_id' => $contact_id,
+              'custom_Representative_Details:Level' => 'congress',
+              'custom_Representative_Details:States/Provinces' => "$contact_addresses->state_province_id",
+              'custom_Representative_Details:District' => "$cd",
             ));
           }
         }
       }
     }
+    $addresses_districted++;
   }
+  return "$addresses_districted addresses districted.";
+}
+
+function rep_details_exists($contact_id, $level) {
+  $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
+    'return' => "id",
+    'custom_group_id' => "Representative_Details",
+    'name' => "electoral_level",
+  ));
+  $rep_details_level_field = 'custom_' . $rep_details_level_id;
+  $rep_details_exists = civicrm_api3('Contact', 'get', array(
+    'return' => "id",
+    'id' => $contact_id,
+    "$rep_details_level_field" => "$level",
+  ));
+
+  return $rep_details_exists;
+}
+
+function rep_details_table_name_id() {
+  $rep_details_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
+    'return' => "table_name",
+    'name' => "Representative_Details",
+  ));
+  return $rep_details_table_name . "_id";
 }
