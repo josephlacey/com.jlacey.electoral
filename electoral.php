@@ -138,7 +138,7 @@ function electoral_civicrm_managed(&$entities) {
     'entity' => 'Job',
     'params' => array(
       'version' => 3,
-      'name '         => 'Open States API - Districts',
+      'name'         => 'Open States API - Districts',
       'description'   => 'Adds state representative districts to contacts',
       'run_frequency' => 'Daily',
       'api_entity'    => 'openStates',
