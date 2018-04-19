@@ -48,56 +48,6 @@ function electoral_civicrm_navigationMenu(&$params) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
 function electoral_civicrm_install() {
-    //Congress API
-    $congress_job_params = array(
-      'sequential' => 1,
-      'name'          => 'Sunlight Foundation Congress API - Legislators',
-      'description'   => 'Creates US legislator contacts via the Sunlight Foundation Congress API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'SfCongress',
-      'api_action'    => 'legs',
-      'is_active'     => 0,
-    );
-    $congress_job = civicrm_api3('job', 'create', $congress_job_params);
-
-    //Contact US districts
-    $congress_districts_job_params = array(
-      'sequential' => 1,
-      'name'          => 'Sunlight Foundation Congress API - Districts',
-      'description'   => 'Adds US legislative districts to contacts',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'SfCongress',
-      'api_action'    => 'districts',
-      'parameters'    => 'limit=100',
-      'is_active'     => 0,
-    );
-    $congress_districts_job = civicrm_api3('job', 'create', $congress_districts_job_params);
-
-    //OpenStates API
-    $openstates_job_params = array(
-      'sequential' => 1,
-      'name'          => 'Open States API - Representatives',
-      'description'   => 'Creates state representative contacts via the Open States API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'openStates',
-      'api_action'    => 'reps',
-      'is_active'     => 0,
-    );
-    $openstates_job = civicrm_api3('job', 'create', $openstates_job_params);
-
-    //Contact state districts
-    $openstates_districts_job_params = array(
-      'sequential' => 1,
-      'name'          => 'Open States API - Districts',
-      'description'   => 'Adds state representative districts to contacts',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'openStates',
-      'api_action'    => 'districts',
-      'parameters'    => 'limit=100',
-      'is_active'     => 0,
-    );
-    $openstates_districts_job = civicrm_api3('job', 'create', $openstates_districts_job_params);
-
     return _electoral_civix_civicrm_install();
 }
 
@@ -107,26 +57,6 @@ function electoral_civicrm_install() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
 function electoral_civicrm_uninstall() {
-  //Deletes Sunlight Foundation Jobs
-  $sunlight_jobs = civicrm_api3('Job', 'get', array(
-    'return' => "id",
-    'name' => array('LIKE' => "Sunlight Foundation Congress API%"),
-  ));
-
-  foreach ($sunlight_jobs['values'] as $sunlight_job) {
-    $sunlight_job_delete = civicrm_api3('job', 'delete', array('id' => $sunlight_job['id'] ));
-  }
-
-  //Deletes Open States Job
-  $open_states_jobs = civicrm_api3('Job', 'get', array(
-    'return' => "id",
-    'name' => array('LIKE' => "Open States API%"),
-  ));
-
-  foreach ($open_states_jobs['values'] as $open_states_job) {
-    $open_states_job_delete = civicrm_api3('job', 'delete', array('id' => $open_states_job['id'] ));
-  }
-
   return _electoral_civix_civicrm_uninstall();
 }
 
@@ -173,6 +103,64 @@ function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
 function electoral_civicrm_managed(&$entities) {
+  $entities[] = array(
+    'module' => 'coop.palantetech.electoral',
+    'name' => 'googlecivicinfo_districts',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - Districts',
+      'description'   => 'Adds US legislative districts to contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'districts',
+      'parameters'    => 'limit=100',
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'coop.palantetech.electoral',
+    'name' => 'googlecivicinfo_reps',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - Legislators',
+      'description'   => 'Creates US legislator contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'reps',
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'coop.palantetech.electoral',
+    'name' => 'openstates_districts',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name '         => 'Open States API - Districts',
+      'description'   => 'Adds state representative districts to contacts',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'openStates',
+      'api_action'    => 'districts',
+      'parameters'    => 'limit=100',
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'coop.palantetech.electoral',
+    'name' => 'openstates_reps',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Open States API - Representatives',
+      'description'   => 'Creates state representative contacts via the Open States API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'openStates',
+      'api_action'    => 'reps',
+      'is_active'     => 0,
+    ),
+  );
   _electoral_civix_civicrm_managed($entities);
 }
 
