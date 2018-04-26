@@ -10,26 +10,26 @@
 class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   protected $_settings = array(
-    'sunlightFoundationAPIKey' => 'Electoral API settings',
-    'openStatesAPIKey' => 'Electoral API settings',
-    'addressLocationType' => 'Electoral API settings',
-    'includedOpenStates' => 'Electoral API settings',
     'googleCivicInformationAPIKey' => 'Electoral API settings',
+    'addressLocationType' => 'Electoral API settings',
+    'includedStatesProvinces' => 'Electoral API settings',
+    'includedCounties' => 'Electoral API settings',
+    'includedCities' => 'Electoral API settings',
   );
 
   function buildQuickForm() {
 
-    $this->add('text', 'sunlightFoundationAPIKey', ts('Sunlight Foundation API key'), NULL);
-    $this->add('text', 'openStatesAPIKey', ts('Open States API key'), NULL);
+    $this->add('text', 'googleCivicInformationAPIKey', ts('Google Civic Information API Key'), NULL);
 		$this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
 		$this->_location_types = array('Primary') + $this->_location_types;
     $this->add('select', 'addressLocationType', ts('Address location for district lookup.'), 
       $this->_location_types, FALSE, array('class' => 'crm-select2')
     );
-    $this->add('select', 'includedOpenStates', ts('States included in Open States API calls'), 
+    $this->add('select', 'includedStatesProvinces', ts('States included in API calls'),
       CRM_Core_PseudoConstant::stateProvince(), FALSE, array('multiple' => 'multiple', 'class' => 'crm-select2')
     );
-    $this->add('text', 'googleCivicInformationAPIKey', ts('Google Civic Information API Key'), NULL);
+    $this->addChainSelect('includedCounties', array('control_field' => 'includedStatesProvinces', 'data-callback' => 'civicrm/ajax/jqCounty', 'label' => "Counties included in the API calls", 'data-empty-prompt' => 'Choose state first', 'data-none-prompt' => '- N/A -', 'multiple' => TRUE, 'required' => FALSE, 'placeholder' => '- none -'));
+    $this->add('text', 'includedCities', ts('Cities included in API Calls'), NULL);
     $this->addButtons(array(
       array(
         'type' => 'submit',

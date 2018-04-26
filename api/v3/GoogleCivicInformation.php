@@ -9,12 +9,12 @@
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */ 
-function civicrm_api3_google_civic_information_districts($params) {
+function civicrm_api3_google_civic_information_country_districts($params, $level) {
 
   if (isset($params['limit']) && is_numeric($params['limit']) ) {
-    $result = google_civic_information_districts($params['limit']);
+    $result = google_civic_information_districts($params['limit'], $level);
   } else {
-    $result = google_civic_information_districts(100);
+    $result = google_civic_information_districts(100, $level);
   }
 
   if (isset($result['error'])) {
@@ -28,7 +28,7 @@ function civicrm_api3_google_civic_information_districts($params) {
 
 }
 
-function google_civic_information_districts($limit) {
+function google_civic_information_districts($limit, $level) {
 
   $addresses_districted = 0;
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'googleCivicInformationAPIKey'));

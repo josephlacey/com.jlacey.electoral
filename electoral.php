@@ -105,16 +105,61 @@ function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
 function electoral_civicrm_managed(&$entities) {
   $entities[] = array(
     'module' => 'coop.palantetech.electoral',
-    'name' => 'googlecivicinfo_districts',
+    'name' => 'googlecivicinfo_country_districts',
     'entity' => 'Job',
     'params' => array(
       'version' => 3,
-      'name'          => 'Google Civic Information API - Districts',
+      'name'          => 'Google Civic Information API - Country Districts',
       'description'   => 'Adds US legislative districts to contacts via the Google Civic Information API',
       'run_frequency' => 'Daily',
       'api_entity'    => 'GoogleCivicInformation',
-      'api_action'    => 'districts',
-      'parameters'    => 'limit=100',
+      'api_action'    => 'country_districts',
+      'parameters'    => "level=country\nlimit=100",
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'coop.palantetech.electoral',
+    'name' => 'googlecivicinfo_state_province_districts',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - State and Province Districts',
+      'description'   => 'Adds state and province districts to contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'state_province_districts',
+      'parameters'    => "level=administrativeArea1\nlimit=100",
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'coop.palantetech.electoral',
+    'name' => 'googlecivicinfo_county_districts',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - County Districts',
+      'description'   => 'Adds county legislative districts to contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'county_districts',
+      'parameters'    => "level=administrativeArea2\nlimit=100",
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'coop.palantetech.electoral',
+    'name' => 'googlecivicinfo_city_districts',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - City Districts',
+      'description'   => 'Adds city legislative districts to contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'city_districts',
+      'parameters'    => "level=locality\nlimit=100",
       'is_active'     => 0,
     ),
   );
@@ -124,39 +169,10 @@ function electoral_civicrm_managed(&$entities) {
     'entity' => 'Job',
     'params' => array(
       'version' => 3,
-      'name'          => 'Google Civic Information API - Legislators',
-      'description'   => 'Creates US legislator contacts via the Google Civic Information API',
+      'name'          => 'Google Civic Information API - Representatives',
+      'description'   => 'Creates representative contacts via the Google Civic Information API',
       'run_frequency' => 'Daily',
       'api_entity'    => 'GoogleCivicInformation',
-      'api_action'    => 'reps',
-      'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
-    'module' => 'coop.palantetech.electoral',
-    'name' => 'openstates_districts',
-    'entity' => 'Job',
-    'params' => array(
-      'version' => 3,
-      'name'         => 'Open States API - Districts',
-      'description'   => 'Adds state representative districts to contacts',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'openStates',
-      'api_action'    => 'districts',
-      'parameters'    => 'limit=100',
-      'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
-    'module' => 'coop.palantetech.electoral',
-    'name' => 'openstates_reps',
-    'entity' => 'Job',
-    'params' => array(
-      'version' => 3,
-      'name'          => 'Open States API - Representatives',
-      'description'   => 'Creates state representative contacts via the Open States API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'openStates',
       'api_action'    => 'reps',
       'is_active'     => 0,
     ),
@@ -214,24 +230,32 @@ function electoral_create_custom_fields() {
     $rd_level_id = $rd_level_og['id'];
     $rd_level_congress = civicrm_api3('OptionValue', 'create', array(
       'option_group_id' => "electoral_level_options",
-      'label' => "Federal",
-      'value' => "congress",
-      'name' => "Federal",
+      'label' => "Country",
+      'value' => "country",
+      'name' => "Country",
       'weight' => 1,
       'is_active' => 1,
     ));
     $rd_level_openstates = civicrm_api3('OptionValue', 'create', array(
       'option_group_id' => "electoral_level_options",
       'label' => "State/Province",
-      'value' => "openstates",
+      'value' => "administrativeArea1",
       'name' => "State/Province",
       'weight' => 2,
+      'is_active' => 1,
+    ));
+    $rd_level_county = civicrm_api3('OptionValue', 'create', array(
+      'option_group_id' => "electoral_level_options",
+      'label' => "County",
+      'value' => "administrativeArea2",
+      'name' => "County",
+      'weight' => 3,
       'is_active' => 1,
     ));
     $rd_level_city = civicrm_api3('OptionValue', 'create', array(
       'option_group_id' => "electoral_level_options",
       'label' => "City",
-      'value' => "nytimes",
+      'value' => "locality",
       'name' => "City",
       'weight' => 3,
       'is_active' => 1,
