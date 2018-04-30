@@ -114,7 +114,7 @@ function electoral_civicrm_managed(&$entities) {
       'run_frequency' => 'Daily',
       'api_entity'    => 'GoogleCivicInformation',
       'api_action'    => 'districts',
-      'parameters'    => "level=country\nlimit=100",
+      'parameters'    => "level=country\nlimit=100\nupdate=0",
       'is_active'     => 0,
     ),
   );
@@ -129,7 +129,7 @@ function electoral_civicrm_managed(&$entities) {
       'run_frequency' => 'Daily',
       'api_entity'    => 'GoogleCivicInformation',
       'api_action'    => 'districts',
-      'parameters'    => "level=administrativeArea1\nlimit=100",
+      'parameters'    => "level=administrativeArea1\nlimit=100\nupdate=0",
       'is_active'     => 0,
     ),
   );
@@ -144,7 +144,7 @@ function electoral_civicrm_managed(&$entities) {
       'run_frequency' => 'Daily',
       'api_entity'    => 'GoogleCivicInformation',
       'api_action'    => 'districts',
-      'parameters'    => "level=administrativeArea2\nlimit=100",
+      'parameters'    => "level=administrativeArea2\nlimit=100\nupdate=0",
       'is_active'     => 0,
     ),
   );
@@ -159,7 +159,7 @@ function electoral_civicrm_managed(&$entities) {
       'run_frequency' => 'Daily',
       'api_entity'    => 'GoogleCivicInformation',
       'api_action'    => 'districts',
-      'parameters'    => "level=locality\nlimit=100",
+      'parameters'    => "level=locality\nlimit=100\nupdate=0",
       'is_active'     => 0,
     ),
   );
