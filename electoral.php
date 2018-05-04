@@ -48,7 +48,7 @@ function electoral_civicrm_navigationMenu(&$params) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
 function electoral_civicrm_install() {
-    return _electoral_civix_civicrm_install();
+  _electoral_civix_civicrm_install();
 }
 
 /**
@@ -57,7 +57,7 @@ function electoral_civicrm_install() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
 function electoral_civicrm_uninstall() {
-  return _electoral_civix_civicrm_uninstall();
+  _electoral_civix_civicrm_uninstall();
 }
 
 /**
@@ -66,8 +66,7 @@ function electoral_civicrm_uninstall() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
 function electoral_civicrm_enable() {
-  electoral_create_custom_fields();
-  return _electoral_civix_civicrm_enable();
+  _electoral_civix_civicrm_enable();
 }
 
 /**
@@ -201,171 +200,3 @@ function electoral_civicrm_caseTypes(&$caseTypes) {
 function electoral_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _electoral_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
-
-/**
- * Create the custom fields used to record subject and body
- *
- */
-function electoral_create_custom_fields() {
-  //Check if Representation Details custom data group already exists
-  $rd_group = civicrm_api3('CustomGroup', 'get', array( 'title' => "Representative Details", ));
-
-  if ($rd_group['count'] == 0) {
-    //If not, create it
-    $rd_group_create = civicrm_api3('CustomGroup', 'create', array(
-      'sequential' => 1,
-      'title' => "Representative Details",
-      'extends' => "Contact",
-      'name' => "Representative_Details",
-      'style' => "Tab with table",
-      'is_multiple' => 1,
-    ));
-
-    //Create Level Option Group and Values
-    $rd_level_og = civicrm_api3('OptionGroup', 'create', array(
-      'name' => "electoral_level_options",
-      'title' => "Level",
-      'is_active' => 1,
-    ));
-    $rd_level_id = $rd_level_og['id'];
-    $rd_level_congress = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "electoral_level_options",
-      'label' => "Country",
-      'value' => "country",
-      'name' => "Country",
-      'weight' => 1,
-      'is_active' => 1,
-    ));
-    $rd_level_openstates = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "electoral_level_options",
-      'label' => "State/Province",
-      'value' => "administrativeArea1",
-      'name' => "State/Province",
-      'weight' => 2,
-      'is_active' => 1,
-    ));
-    $rd_level_county = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "electoral_level_options",
-      'label' => "County",
-      'value' => "administrativeArea2",
-      'name' => "County",
-      'weight' => 3,
-      'is_active' => 1,
-    ));
-    $rd_level_city = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "electoral_level_options",
-      'label' => "City",
-      'value' => "locality",
-      'name' => "City",
-      'weight' => 3,
-      'is_active' => 1,
-    ));
-    
-    //Create Chamber Option Group and Values
-    $rd_chamber_og = civicrm_api3('OptionGroup', 'create', array(
-      'name' => "electoral_chamber_options",
-      'title' => "Chamber",
-      'is_active' => 1,
-    ));
-    $rd_chamber_id = $rd_chamber_og['id'];
-    $rd_chamber_upper = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "electoral_chamber_options",
-      'label' => "Upper",
-      'value' => "upper",
-      'name' => "Upper",
-      'weight' => 1,
-      'is_active' => 1,
-    ));
-    $rd_chamber_lower = civicrm_api3('OptionValue', 'create', array(
-      'option_group_id' => "electoral_chamber_options",
-      'label' => "Lower",
-      'value' => "lower",
-      'name' => "Lower",
-      'weight' => 2,
-      'is_active' => 1,
-    ));
-    
-    //Create Representative Details Fields
-    $rd_level_field = civicrm_api3('CustomField', 'create', array(
-      'custom_group_id' => "Representative_Details",
-      'label' => "Level",
-      'name' => "electoral_level",
-      'data_type' => "String",
-      'html_type' => "Select",
-      'is_searchable' => 1,
-      'weight' => 1,
-      'is_active' => 1,
-      'option_group_id' => $rd_level_id,
-      'in_selector' => 1,
-    ));
-    $rd_states_provinces_field = civicrm_api3('CustomField', 'create', array(
-      'custom_group_id' => "Representative_Details",
-      'label' => "States/Provinces",
-      'name' => "electoral_states_provinces",
-      'data_type' => "StateProvince",
-      'html_type' => "Select State/Province",
-      'is_searchable' => 1,
-      'weight' => 2,
-      'is_active' => 1,
-      'in_selector' => 1,
-    ));
-    $rd_counties_field = civicrm_api3('CustomField', 'create', array(
-      'custom_group_id' => "Representative_Details",
-      'label' => "County",
-      'name' => "electoral_counties",
-      'data_type' => "String",
-      'html_type' => "Text",
-      'is_searchable' => 1,
-      'weight' => 3,
-      'is_active' => 1,
-      'in_selector' => 1,
-    ));
-    $rd_city_field = civicrm_api3('CustomField', 'create', array(
-      'custom_group_id' => "Representative_Details",
-      'label' => "City",
-      'name' => "electoral_city",
-      'data_type' => "String",
-      'html_type' => "Text",
-      'is_searchable' => 1,
-      'weight' => 4,
-      'is_active' => 1,
-      'in_selector' => 1,
-    ));
-    $rd_chamber_field = civicrm_api3('CustomField', 'create', array(
-      'custom_group_id' => "Representative_Details",
-      'label' => "Chamber",
-      'name' => "electoral_chamber",
-      'data_type' => "String",
-      'html_type' => "Select",
-      'is_searchable' => 1,
-      'weight' => 5,
-      'is_active' => 1,
-      'option_group_id' => $rd_chamber_id,
-      'in_selector' => 1,
-    ));
-    $rd_district_field = civicrm_api3('CustomField', 'create', array(
-      'custom_group_id' => "Representative_Details",
-      'label' => "District",
-      'name' => "electoral_district",
-      'data_type' => "String",
-      'html_type' => "Text",
-      'is_searchable' => 1,
-      'weight' => 6,
-      'is_active' => 1,
-      'in_selector' => 1,
-    ));
-    $rd_in_office_field = civicrm_api3('CustomField', 'create', array(
-      'sequential' => 1,
-      'custom_group_id' => "Representative_Details",
-      'label' => "In Office?",
-      'name' => "electoral_in_office",
-      'data_type' => "Boolean",
-      'html_type' => "Radio",
-      'is_searchable' => 1,
-      'weight' => 5,
-      'is_active' => 1,
-      'in_selector' => 1,
-    ));
-  }
-}
-

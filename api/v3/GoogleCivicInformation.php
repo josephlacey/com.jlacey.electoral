@@ -35,7 +35,7 @@ function civicrm_api3_google_civic_information_districts($params) {
 
 function google_civic_information_districts($level, $limit, $update) {
 
-  $addresses_districted = $districting_errors = 0;
+  $addresses_districted = $parsing_errors = 0;
   $statesProvinces = $counties = $cities =  array();
   $contacts_with_address_parsing_errors = '';
 
@@ -61,15 +61,9 @@ function google_civic_information_districts($level, $limit, $update) {
     2 => array($limit, 'Integer'),
   );
 
-  $rep_details_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
+  $ed_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
     'return' => "table_name",
-    'name' => "Representative_Details",
-    'label' => "Level",
-  ));
-  $rep_details_level_column_name = civicrm_api3('CustomField', 'getvalue', array(
-    'return' => "column_name",
-    'custom_group_id' => "Representative_Details",
-    'label' => "Level",
+    'name' => "electoral_districts",
   ));
 
   // Assemble address lookup query
@@ -79,9 +73,9 @@ function google_civic_information_districts($level, $limit, $update) {
               ca.state_province_id,
               ca.contact_id
          FROM civicrm_address ca
-    LEFT JOIN $rep_details_table_name civicinfo
-           ON ca.contact_id = civicinfo.entity_id
-          AND civicinfo.$rep_details_level_column_name = '$level'
+    LEFT JOIN $ed_table_name ed
+           ON ca.contact_id = ed.entity_id
+          AND ed.electoral_districts_level = '$level'
    INNER JOIN civicrm_contact cc
            ON ca.contact_id = cc.id
         WHERE ca.street_address IS NOT NULL
@@ -107,7 +101,7 @@ function google_civic_information_districts($level, $limit, $update) {
   //FIXME there's probably a better way to do this
   if (!$update) {
     $address_sql .= "
-          AND civicinfo.id IS NULL
+          AND ed.id IS NULL
     ";
   }
 
@@ -149,7 +143,7 @@ function google_civic_information_districts($level, $limit, $update) {
       //CRM_Core_Error::debug_var('url', $url);
       //CRM_Core_Error::debug_var('districts', $districts);
       if ($districts['error']['errors'][0]['reason'] == 'parseError') {
-        $districting_errors++;
+        $parsing_errors++;
         if ($contacts_with_address_parsing_errors == '') {
           $contacts_with_address_parsing_errors = "$contact_addresses->contact_id";
         } else {
@@ -179,25 +173,25 @@ function google_civic_information_districts($level, $limit, $update) {
                 break;
               case 'cd':
                 if ($level == 'country') {
-                  rep_details_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, NULL, NULL, $ocdValue);
+                  ed_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, NULL, NULL, $ocdValue);
                 }
                 break;
               case 'sldu':
                 if ($level == 'administrativeArea1') {
-                  rep_details_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, NULL, 'upper', $ocdValue);
+                  ed_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, NULL, 'upper', $ocdValue);
                 }
                 break;
               case 'sldl':
                 if ($level == 'administrativeArea1') {
-                  rep_details_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, NULL, 'lower', $ocdValue);
+                  ed_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, NULL, 'lower', $ocdValue);
                 }
                 break;
               case 'council_district':
                 if ($level == 'administrativeArea2' && !empty($county)) {
-                  rep_details_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, $county, NULL, NULL, $ocdValue);
+                  ed_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, $county, NULL, NULL, $ocdValue);
                 }
                 if ($level == 'locality' && !empty($city)) {
-                  rep_details_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, $city, NULL, $ocdValue);
+                  ed_create_update($contact_addresses->contact_id, $level, $contact_addresses->state_province_id, NULL, $city, NULL, $ocdValue);
                 }
                 break;
               default:
@@ -212,70 +206,75 @@ function google_civic_information_districts($level, $limit, $update) {
     }
     $addresses_districted++;
   }
-  return "$addresses_districted addresses districted. $districting_errors addresses with parsing errors: contact ids ($contacts_with_address_parsing_errors).";
+
+  $ed_return = "$addresses_districted addresses districted.";
+  if ($parsing_errors > 0) {
+    $ed_return .= " $parsing_errors addresses with parsing errors: contact ids ($contacts_with_address_parsing_errors).";
+  }
+  return $ed_return;
 }
 
-function rep_details_create_update($contact_id, $level, $state_province_id = NULL, $county_id = NULL, $city = NULL, $chamber = NULL, $district = NULL) {
+function ed_create_update($contact_id, $level, $state_province_id = NULL, $county_id = NULL, $city = NULL, $chamber = NULL, $district = NULL) {
   //Check if this level exists already
-  $contact_rep_details_exists = rep_details_exists($contact_id, "$level", "$chamber");
-  if ($contact_rep_details_exists['count'] == 1) {
+  $contact_ed_exists = ed_exists($contact_id, "$level", "$chamber");
+  if ($contact_ed_exists['count'] == 1) {
     //Get the custom value set id
-    $rep_details_table_name_id = rep_details_table_name_id();
-    $rep_details_id = $contact_rep_details_exists['values'][$contact_id][$rep_details_table_name_id];
+    $ed_table_name_id = ed_table_name_id();
+    $ed_id = $contact_ed_exists['values'][$contact_id][$ed_table_name_id];
     //Update
-    $contact_rep_details_update = civicrm_api3('CustomValue', 'create', array(
+    $contact_ed_update = civicrm_api3('CustomValue', 'create', array(
       'entity_id' => $contact_id,
-      "custom_Representative_Details:Level:$rep_details_id" => "$level",
-      "custom_Representative_Details:States/Provinces:$rep_details_id" => "$state_province_id",
-      "custom_Representative_Details:County:$rep_details_id" => "$county_id",
-      "custom_Representative_Details:City:$rep_details_id" => "$city",
-      "custom_Representative_Details:Chamber:$rep_details_id" => "$chamber",
-      "custom_Representative_Details:District:$rep_details_id" => "$district",
+      "custom_electoral_districts:Level:$ed_id" => "$level",
+      "custom_electoral_districts:States/Provinces:$ed_id" => "$state_province_id",
+      "custom_electoral_districts:County:$ed_id" => "$county_id",
+      "custom_electoral_districts:City:$ed_id" => "$city",
+      "custom_electoral_districts:Chamber:$ed_id" => "$chamber",
+      "custom_electoral_districts:District:$ed_id" => "$district",
     ));
   } else {
     //Create
-    $contact_rep_details_create = civicrm_api3('CustomValue', 'create', array(
+    $contact_ed_create = civicrm_api3('CustomValue', 'create', array(
       'entity_id' => $contact_id,
-      'custom_Representative_Details:Level' => "$level",
-      'custom_Representative_Details:States/Provinces' => "$state_province_id",
-      "custom_Representative_Details:County" => "$county_id",
-      "custom_Representative_Details:City" => "$city",
-      'custom_Representative_Details:Chamber' => "$chamber",
-      'custom_Representative_Details:District' => "$district",
+      'custom_electoral_districts:Level' => "$level",
+      'custom_electoral_districts:States/Provinces' => "$state_province_id",
+      "custom_electoral_districts:County" => "$county_id",
+      "custom_electoral_districts:City" => "$city",
+      'custom_electoral_districts:Chamber' => "$chamber",
+      'custom_electoral_districts:District' => "$district",
     ));
   }
 }
 
-function rep_details_exists($contact_id, $level, $chamber = NULL) {
-  $rep_details_exists_params = array(
+function ed_exists($contact_id, $level, $chamber = NULL) {
+  $ed_exists_params = array(
     'return' => "id",
     'id' => $contact_id,
   );
-  $rep_details_level_id = civicrm_api3('CustomField', 'getvalue', array(
+  $ed_level_id = civicrm_api3('CustomField', 'getvalue', array(
     'return' => "id",
-    'custom_group_id' => "Representative_Details",
+    'custom_group_id' => "electoral_districts",
     'name' => "electoral_level",
   ));
-  $rep_details_level_field = 'custom_' . $rep_details_level_id;
-  $rep_details_exists_params[$rep_details_level_field] = "$level";
+  $ed_level_field = 'custom_' . $ed_level_id;
+  $ed_exists_params[$ed_level_field] = "$level";
   if (!empty($chamber)) {
-    $rep_details_chamber_id = civicrm_api3('CustomField', 'getvalue', array(
+    $ed_chamber_id = civicrm_api3('CustomField', 'getvalue', array(
       'return' => "id",
-      'custom_group_id' => "Representative_Details",
+      'custom_group_id' => "electoral_districts",
       'name' => "electoral_chamber",
     ));
-    $rep_details_chamber_field = 'custom_' . $rep_details_chamber_id;
-    $rep_details_exists_params[$rep_details_chamber_field] = "$chamber";
+    $ed_chamber_field = 'custom_' . $ed_chamber_id;
+    $ed_exists_params[$ed_chamber_field] = "$chamber";
   }
-  $rep_details_exists = civicrm_api3('Contact', 'get', $rep_details_exists_params);
+  $ed_exists = civicrm_api3('Contact', 'get', $ed_exists_params);
 
-  return $rep_details_exists;
+  return $ed_exists;
 }
 
-function rep_details_table_name_id() {
-  $rep_details_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
+function ed_table_name_id() {
+  $ed_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
     'return' => "table_name",
-    'name' => "Representative_Details",
+    'name' => "electoral_districts",
   ));
-  return $rep_details_table_name . "_id";
+  return $ed_table_name . "_id";
 }
