@@ -37,7 +37,7 @@ function google_civic_information_districts($level, $limit, $update) {
 
   $addresses_districted = $parsing_errors = 0;
   $statesProvinces = $counties = $cities =  array();
-  $contacts_with_address_parsing_errors = '';
+  $contacts_with_address_parsing_errors = $contacts_with_other_address_errors = '';
 
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'googleCivicInformationAPIKey'));
   $addressLocationType = civicrm_api3('Setting', 'getvalue', array('name' => 'addressLocationType'));
@@ -116,7 +116,7 @@ function google_civic_information_districts($level, $limit, $update) {
 
   while ($contact_addresses->fetch()) {
 
-    $street_address = $city = $state = $postal_code = $districts = $contact_id = '';
+    $street_address = $city = $state = $postal_code = $districts = '';
     
     $street_address = rawurlencode($contact_addresses->street_address);
     $city = rawurlencode($contact_addresses->city);
@@ -149,9 +149,9 @@ function google_civic_information_districts($level, $limit, $update) {
         } else {
           $contacts_with_address_parsing_errors .= ", $contact_addresses->contact_id";
         }
-        continue;
+      } else {
+       $contacts_with_other_address_errors .= " " . $contact_addresses->contact_id . ": " . $districts['error']['message'] . " (" . $districts['error']['code'] . "),";
       }
-      return $districts;
     } else {
       foreach ($districts['divisions'] as $ocdId => $name) {
         $ocdDivisions = explode('/', substr($ocdId, 13));
@@ -203,14 +203,15 @@ function google_civic_information_districts($level, $limit, $update) {
         }
         $county = $city = '';
       }
+      $addresses_districted++;
     }
-    $addresses_districted++;
   }
 
   $ed_return = "$addresses_districted addresses districted.";
   if ($parsing_errors > 0) {
     $ed_return .= " $parsing_errors addresses with parsing errors: contact ids ($contacts_with_address_parsing_errors).";
   }
+  $ed_return .= $contacts_with_other_address_errors;
   return $ed_return;
 }
 
