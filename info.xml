@@ -1,25 +1,25 @@
 <?xml version="1.0"?>
-<extension key="coop.palantetech.electoral" type="module">
+<extension key="com.jlacey.electoral" type="module">
   <file>electoral</file>
   <name>Electoral API</name>
   <description>Electoral API integration</description>
   <license>AGPL-3.0</license>
   <maintainer>
     <author>Joseph Lacey</author>
-    <email>joseph@palantetech.coop</email>
+    <email>joseph@mayfirst.org</email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">https://github.com/josephlacey/coop.palantetech.electoral</url>
-    <url desc="Documentation">https://hq.palantetech.coop/projects/electoral-api/wiki</url>
-    <url desc="Support">https://hq.palantetech.coop/projects/electoral-api/issues/new</url>
+    <url desc="Main Extension Page">https://github.com/josephlacey/com.jlacey.electoral</url>
+    <url desc="Support">https://github.com/josephlacey/com.jlacey.electoral/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2015-03-02</releaseDate>
   <version>2.0</version>
-  <develStage>alpha</develStage>
+  <develStage>stable</develStage>
   <compatibility>
     <ver>4.6</ver>
     <ver>4.7</ver>
+    <ver>5.0</ver>
   </compatibility>
   <comments>This module provides integration to various electoral API's.  Currently included API's are Google's Civic Information API and the Open States API.  It's development has been funded by the Center for Constitional Rights and 9to5.</comments>
   <civix>

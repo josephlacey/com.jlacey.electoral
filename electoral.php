@@ -30,7 +30,7 @@ function electoral_civicrm_xmlMenu(&$files) {
 function electoral_civicrm_navigationMenu(&$params) {
   $path = "Administer/System Settings";
   $item = array(
-    'label' => ts('Electoral API', array('coop.palantetech.electoral')),
+    'label' => ts('Electoral API', array('com.jlacey.electoral')),
     'name' => 'Electoral API',
     'url' => 'civicrm/admin/setting/electoral',
     'permission' => 'administer CiviCRM',
@@ -103,7 +103,7 @@ function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  */
 function electoral_civicrm_managed(&$entities) {
   $entities[] = array(
-    'module' => 'coop.palantetech.electoral',
+    'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_country_districts',
     'entity' => 'Job',
     'params' => array(
@@ -118,7 +118,7 @@ function electoral_civicrm_managed(&$entities) {
     ),
   );
   $entities[] = array(
-    'module' => 'coop.palantetech.electoral',
+    'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_state_province_districts',
     'entity' => 'Job',
     'params' => array(
@@ -133,7 +133,7 @@ function electoral_civicrm_managed(&$entities) {
     ),
   );
   $entities[] = array(
-    'module' => 'coop.palantetech.electoral',
+    'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_county_districts',
     'entity' => 'Job',
     'params' => array(
@@ -148,7 +148,7 @@ function electoral_civicrm_managed(&$entities) {
     ),
   );
   $entities[] = array(
-    'module' => 'coop.palantetech.electoral',
+    'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_city_districts',
     'entity' => 'Job',
     'params' => array(
@@ -163,7 +163,7 @@ function electoral_civicrm_managed(&$entities) {
     ),
   );
   $entities[] = array(
-    'module' => 'coop.palantetech.electoral',
+    'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_reps',
     'entity' => 'Job',
     'params' => array(

@@ -39,7 +39,7 @@ class CRM_Electoral_Upgrader_Base {
     if (! self::$instance) {
       // FIXME auto-generate
       self::$instance = new CRM_Electoral_Upgrader(
-        'coop.palante.electoral',
+        'com.jlacey.electoral',
         realpath(__DIR__ .'/../../../')
       );
     }

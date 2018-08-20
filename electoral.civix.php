@@ -170,7 +170,7 @@ function _electoral_civix_civicrm_managed(&$entities) {
     $es = include $file;
     foreach ($es as $e) {
       if (empty($e['module'])) {
-        $e['module'] = 'coop.palantetech.electoral';
+        $e['module'] = 'com.jlacey.electoral';
       }
       $entities[] = $e;
     }
@@ -199,7 +199,7 @@ function _electoral_civix_civicrm_caseTypes(&$caseTypes) {
       // throw new CRM_Core_Exception($errorMessage);
     }
     $caseTypes[$name] = array(
-      'module' => 'coop.palantetech.electoral',
+      'module' => 'com.jlacey.electoral',
       'name' => $name,
       'file' => $file,
     );

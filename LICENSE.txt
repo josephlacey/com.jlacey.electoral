@@ -1,5 +1,5 @@
-Package: coop.palantetech.sunlight
-Copyright (C) 2015, Joseph Lacey <joseph@palantetech.coop>
+Package: com.jlacey.electoral
+Copyright (C) 2015, Joseph Lacey <joseph@mayfirst.org>
 Licensed under the GNU Affero Public License 3.0 (below).
 
 -------------------------------------------------------------------------------
