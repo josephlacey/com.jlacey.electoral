@@ -35,10 +35,12 @@ function civicrm_api3_google_civic_information_districts($params) {
 
 function google_civic_information_districts($level, $limit, $update) {
 
-  $addresses_districted = $parsing_errors = 0;
+  //Set variables
+  $addresses_districted = $parsing_errors = $not_found_errors = 0;
   $statesProvinces = $counties = $cities =  array();
-  $contacts_with_address_parsing_errors = $contacts_with_other_address_errors = '';
+  $contacts_with_address_parsing_errors = $contacts_with_not_found_address_errors = $contacts_with_other_address_errors = '';
 
+  //Load settings
   $apikey = civicrm_api3('Setting', 'getvalue', array('name' => 'googleCivicInformationAPIKey'));
   $addressLocationType = civicrm_api3('Setting', 'getvalue', array('name' => 'addressLocationType'));
   $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', array('name' => 'includedStatesProvinces'));
@@ -53,22 +55,30 @@ function google_civic_information_districts($level, $limit, $update) {
   foreach( $includedCities as $city) {
     $cities[] = strtolower($city);
   }
-
   $address_states_provinces = implode(', ', $includedStatesProvinces);
+
   // Set params for address lookup
   $address_sql_params = array(
     1 => array($addressLocationType, 'Integer'),
     2 => array($limit, 'Integer'),
   );
 
+  //Electoral District table
   $ed_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
     'return' => "table_name",
     'name' => "electoral_districts",
   ));
 
+  //Electoral Status table
+  $es_table_name = civicrm_api3('CustomGroup', 'getvalue', array(
+    'return' => "table_name",
+    'name' => "electoral_status",
+  ));
+
   // Assemble address lookup query
   $address_sql = "
-       SELECT ca.street_address,
+       SELECT ca.id,
+              ca.street_address,
               ca.city,
               ca.state_province_id,
               ca.contact_id
@@ -76,13 +86,15 @@ function google_civic_information_districts($level, $limit, $update) {
     LEFT JOIN $ed_table_name ed
            ON ca.contact_id = ed.entity_id
           AND ed.electoral_districts_level = '$level'
+    LEFT JOIN $es_table_name es
+           ON ca.id = es.entity_id
    INNER JOIN civicrm_contact cc
            ON ca.contact_id = cc.id
         WHERE ca.street_address IS NOT NULL
-          AND ca.street_address NOT LIKE '%PO Box%'
           AND ca.city IS NOT NULL
           AND ca.state_province_id IN ($address_states_provinces)
           AND ca.country_id = 1228
+          AND es.electoral_status_error_code IS NULL
           AND cc.is_deceased != 1
           AND cc.is_deleted != 1
   ";
@@ -107,6 +119,8 @@ function google_civic_information_districts($level, $limit, $update) {
 
   //Throttling
   $address_sql .= "
+     GROUP BY cc.id
+     ORDER BY cc.id DESC
         LIMIT %2
   ";
   //CRM_Core_Error::debug_var('address_sql', $address_sql);
@@ -149,9 +163,22 @@ function google_civic_information_districts($level, $limit, $update) {
         } else {
           $contacts_with_address_parsing_errors .= ", $contact_addresses->contact_id";
         }
+      } elseif ($districts['error']['errors'][0]['reason'] == 'notFound') {
+        $not_found_errors++;
+        if ($contacts_with_not_found_address_errors == '') {
+          $contacts_with_not_found_address_errors = "$contact_addresses->contact_id";
+        } else {
+          $contacts_with_not_found_address_errors .= ", $contact_addresses->contact_id";
+        }
       } else {
        $contacts_with_other_address_errors .= " " . $contact_addresses->contact_id . ": " . $districts['error']['message'] . " (" . $districts['error']['code'] . "),";
       }
+      $address_error_create = civicrm_api3('CustomValue', 'create', [
+        'entity_id' => $contact_addresses->id,
+        'custom_electoral_status:Error Code' => $districts['error']['code'],
+        'custom_electoral_status:Error Reason' => $districts['error']['errors'][0]['reason'],
+        'custom_electoral_status:Error Message' => $districts['error']['message'],
+      ]);
     } else {
       foreach ($districts['divisions'] as $ocdId => $name) {
         $ocdDivisions = explode('/', substr($ocdId, 13));
@@ -195,6 +222,11 @@ function google_civic_information_districts($level, $limit, $update) {
                 }
                 break;
               default:
+                $address_error_create = civicrm_api3('CustomValue', 'create', [
+                  'entity_id' => $contact_addresses->id,
+                  'custom_electoral_status:Error Code' => 1000,
+                  'custom_electoral_status:Error Message' => 'Insufficient data',
+                ]);
                 continue;
             }
             $ocdValue = '';
@@ -210,6 +242,9 @@ function google_civic_information_districts($level, $limit, $update) {
   $ed_return = "$addresses_districted addresses districted.";
   if ($parsing_errors > 0) {
     $ed_return .= " $parsing_errors addresses with parsing errors: contact ids ($contacts_with_address_parsing_errors).";
+  }
+  if ($not_found_errors > 0) {
+    $ed_return .= " $not_found_errors addresses not found: contact ids ($contacts_with_not_found_address_errors).";
   }
   $ed_return .= $contacts_with_other_address_errors;
   return $ed_return;
