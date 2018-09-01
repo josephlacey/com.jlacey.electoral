@@ -48,6 +48,20 @@ function electoral_civicrm_navigationMenu(&$params) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
 function electoral_civicrm_install() {
+
+  $demTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Democrat",]);
+  if ($demTagExists == 0) {
+    $demTag = civicrm_api3('Tag', 'create', ['name' => "Democrat",]);
+  }
+  $repTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Republican",]);
+  if ($repTagExists == 0) {
+    $repTag = civicrm_api3('Tag', 'create', ['name' => "Republican",]);
+  }
+  $indTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Independent",]);
+  if ($indTagExists == 0) {
+    $indTag = civicrm_api3('Tag', 'create', ['name' => "Independent",]);
+  }
+
   _electoral_civix_civicrm_install();
 }
 
@@ -164,15 +178,61 @@ function electoral_civicrm_managed(&$entities) {
   );
   $entities[] = array(
     'module' => 'com.jlacey.electoral',
-    'name' => 'googlecivicinfo_reps',
+    'name' => 'googlecivicinfo_country_reps',
     'entity' => 'Job',
     'params' => array(
       'version' => 3,
-      'name'          => 'Google Civic Information API - Representatives',
-      'description'   => 'Creates representative contacts via the Google Civic Information API',
+      'name'          => 'Google Civic Information API - Country Representatives',
+      'description'   => 'Adds US representative contacts via the Google Civic Information API',
       'run_frequency' => 'Daily',
       'api_entity'    => 'GoogleCivicInformation',
       'api_action'    => 'reps',
+      'parameters'    => "level=country\nroles=legislatorUpperBody,legislatorLowerBody",
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'com.jlacey.electoral',
+    'name' => 'googlecivicinfo_state_province_reps',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - State and Province Representatives',
+      'description'   => 'Adds US state representive contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'reps',
+      'parameters'    => "level=administrativeArea1\nroles=legislatorUpperBody,legislatorLowerBody",
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'com.jlacey.electoral',
+    'name' => 'googlecivicinfo_county_reps',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - County Representatives',
+      'description'   => 'Adds US county represenative contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'reps',
+      'parameters'    => "level=administrativeArea2",
+      'is_active'     => 0,
+    ),
+  );
+  $entities[] = array(
+    'module' => 'com.jlacey.electoral',
+    'name' => 'googlecivicinfo_city_reps',
+    'entity' => 'Job',
+    'params' => array(
+      'version' => 3,
+      'name'          => 'Google Civic Information API - City Representatives',
+      'description'   => 'Adds US city representative contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'reps',
+      'parameters'    => "level=locality",
       'is_active'     => 0,
     ),
   );

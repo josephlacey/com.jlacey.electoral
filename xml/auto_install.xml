@@ -17,6 +17,7 @@
       <name>electoral_status</name>
       <title>Electoral Status</title>
       <extends>Address</extends>
+      <style>Inline</style>
       <weight>1</weight>
       <is_active>1</is_active>
       <collapse_display>1</collapse_display>
@@ -140,7 +141,7 @@
     <CustomField>
       <name>electoral_status_error_code</name>
       <label>Error Code</label>
-      <data_type>Integer</data_type>
+      <data_type>Int</data_type>
       <html_type>Text</html_type>
       <is_required>0</is_required>
       <is_searchable>1</is_searchable>
@@ -148,7 +149,7 @@
       <weight>1</weight>
       <is_active>1</is_active>
       <is_view>0</is_view>
-      <text_length>128</text_length>
+      <text_length>255</text_length>
       <column_name>electoral_status_error_code</column_name>
       <custom_group_name>electoral_status</custom_group_name>
     </CustomField>
@@ -163,13 +164,13 @@
       <weight>2</weight>
       <is_active>1</is_active>
       <is_view>0</is_view>
-      <text_length>128</text_length>
+      <text_length>255</text_length>
       <column_name>electoral_status_error_reason</column_name>
       <custom_group_name>electoral_status</custom_group_name>
     </CustomField>
     <CustomField>
       <name>electoral_status_error_message</name>
-      <label>Error Code</label>
+      <label>Error Message</label>
       <data_type>String</data_type>
       <html_type>Text</html_type>
       <is_required>0</is_required>
