@@ -7,6 +7,11 @@
            <td>{$form.googleCivicInformationAPIKey.html|crmAddClass:huge}<br />
            <span class="description">{ts}Enter your Google Civic Information API Key.  <a href="https://developers.google.com/civic-information/docs/using_api#APIKey" target="_blank">Register at the Google Civic Information API</a> to obtain a key.{/ts}</span></td>
        </tr>
+       <tr class="crm-electroral-api-form-block-propublica-congress-api-key">
+           <td>{$form.proPublicaCongressAPIKey.label}</td>
+           <td>{$form.proPublicaCongressAPIKey.html|crmAddClass:huge}<br />
+           <span class="description">{ts}Enter your ProPublica Congress API Key.  <a href="https://www.propublica.org/datastore/api/propublica-congress-api" target="_blank">Register at the ProPublica Congress API</a> to obtain a key.{/ts}</span></td>
+       </tr>
        <tr class="crm-electoral-api-form-block-address-location-type">
            <td>{$form.addressLocationType.label}</td>
            <td>{$form.addressLocationType.html}<br />

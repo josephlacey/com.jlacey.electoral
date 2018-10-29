@@ -11,6 +11,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   protected $_settings = array(
     'googleCivicInformationAPIKey' => 'Electoral API settings',
+    'proPublicaCongressAPIKey' => 'Electoral API settings',
     'addressLocationType' => 'Electoral API settings',
     'includedStatesProvinces' => 'Electoral API settings',
     'includedCounties' => 'Electoral API settings',
@@ -20,6 +21,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   function buildQuickForm() {
 
     $this->add('text', 'googleCivicInformationAPIKey', ts('Google Civic Information API Key'), NULL);
+    $this->add('text', 'proPublicaCongressAPIKey', ts('ProPublica Congress API Key'), NULL);
 		$this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
 		$this->_location_types = array('Primary') + $this->_location_types;
     $this->add('select', 'addressLocationType', ts('Address location for district lookup.'), 

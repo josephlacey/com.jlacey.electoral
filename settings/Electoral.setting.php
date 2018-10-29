@@ -16,6 +16,18 @@ return array(
     'description' => 'Google Civic API Key',
     'help_text' => 'Add your registered Google Civic Information API Key for Open Civic Data API calls',
   ),
+  'proPublicaCongressAPIKey' => array(
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
+    'name' => 'proPublicaCongressAPIKey',
+    'type' => 'Text',
+    'default' => '',
+    'add' => '4.7',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'ProPublica Congress API Key',
+    'help_text' => 'Add your registered ProPublica Congress API Key for API calls',
+  ),
   'addressLocationType' => array(
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
