@@ -345,7 +345,6 @@ function electoral_district_addresses($limit, $level, $statesProvinces, $update)
           AND cc.is_deceased != 1
           AND cc.is_deleted != 1
           AND es.electoral_status_error_code IS NULL
-          AND cc.id = 202
   ";
 
   //Handle a location type of Primary.
