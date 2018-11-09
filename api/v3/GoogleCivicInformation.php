@@ -73,7 +73,7 @@ function google_civic_information_country_districts($level, $limit, $update) {
     //Check for errors first
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
-      electoral_district_address_errors($districts);
+      electoral_district_address_errors($districts, $contactAddresses->id);
     //Process divisions
     } else {
       $countryDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
@@ -132,7 +132,7 @@ function google_civic_information_state_districts($level, $limit, $update) {
     //Check for errors first
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
-      electoral_district_address_errors($districts);
+      electoral_district_address_errors($districts, $contactAddresses->id);
     //Process divisions
     } else {
       $countryDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
@@ -203,7 +203,7 @@ function google_civic_information_county_districts($level, $limit, $update) {
     //Check for errors first
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
-      electoral_district_address_errors($districts);
+      electoral_district_address_errors($districts, $contactAddresses->id);
     //Process divisions
     } else {
       $countyDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
@@ -272,7 +272,7 @@ function google_civic_information_city_districts($level, $limit, $update) {
     //Check for errors first
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
-      electoral_district_address_errors($districts);
+      electoral_district_address_errors($districts, $contactAddresses->id);
     //Process divisions
     } else {
       $cityDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
@@ -380,10 +380,10 @@ function electoral_district_addresses($limit, $level, $statesProvinces, $update)
 /*
  * Helper function to save address errors when they occur
  */
-function electoral_district_address_errors($districts) {
+function electoral_district_address_errors($districts, $addressId) {
   //Retain the error, so we can filter out the address on future runs until it's corrected
   $address_error_create = civicrm_api3('CustomValue', 'create', [
-    'entity_id' => $contactAddresses->id,
+    'entity_id' => $addressesId,
     'custom_electoral_status:Error Code' => $districts['error']['code'],
     'custom_electoral_status:Error Reason' => $districts['error']['errors'][0]['reason'],
     'custom_electoral_status:Error Message' => $districts['error']['message'],
