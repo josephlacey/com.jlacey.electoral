@@ -383,7 +383,7 @@ function electoral_district_addresses($limit, $level, $statesProvinces, $update)
 function electoral_district_address_errors($districts, $addressId) {
   //Retain the error, so we can filter out the address on future runs until it's corrected
   $address_error_create = civicrm_api3('CustomValue', 'create', [
-    'entity_id' => $addressesId,
+    'entity_id' => $addressId,
     'custom_electoral_status:Error Code' => $districts['error']['code'],
     'custom_electoral_status:Error Reason' => $districts['error']['errors'][0]['reason'],
     'custom_electoral_status:Error Message' => $districts['error']['message'],
