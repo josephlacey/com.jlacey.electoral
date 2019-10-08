@@ -44,7 +44,7 @@ function civicrm_api3_google_civic_information_districts($params) {
 function google_civic_information_country_districts($level, $limit, $update) {
 
   //Set variables
-  $addressesDistricted = $addressesWithErrors = 0;
+  $addressesDistricted = $addressesWithNoDistrict = $addressesWithErrors = 0;
 
   //API Key
   $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
@@ -59,7 +59,7 @@ function google_civic_information_country_districts($level, $limit, $update) {
 
   while ($contactAddresses->fetch()) {
 
-    $streetAddress = $city = $state = $districts = '';
+    $streetAddress = $city = $stateProvinceAbbrev = $districts = $gotDistrict = '';
     
     //Assemble the API URL
     $streetAddress = rawurlencode($contactAddresses->street_address);
@@ -74,8 +74,11 @@ function google_civic_information_country_districts($level, $limit, $update) {
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
       electoral_district_address_errors($districts, $contactAddresses->id);
+      continue;
+    }
+
     //Process divisions
-    } else {
+    if (array_key_exists('divisions', $districts)) {
       $countryDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
@@ -84,13 +87,24 @@ function google_civic_information_country_districts($level, $limit, $update) {
           $divisionParts = explode(':', str_replace($countryDivision, '', $divisionKey));
           $divisionDistrict = $divisionParts[1];
         }
-        electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, NULL, NULL, $divisionDistrict);
+        if ($divisionDistrict) {
+          electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, NULL, NULL, $divisionDistrict);
+          $gotDistrict = TRUE;
+        }
       }
+    }
+    if ($gotDistrict) {
       $addressesDistricted++;
+    } else {
+      $addressesWithNoDistrict++;
+      electoral_district_districtless_address($contactAddresses->id, $level);
     }
   }
 
   $edDistrictReturn = "$addressesDistricted addresses districted.";
+  if ($addressesWithNoDistrict > 0) {
+    $edDistrictReturn .= " Districts not found for $addressesWithNoDistrict addresses.";
+  }  
   if ($addressesWithErrors > 0) {
     $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
   }
@@ -103,7 +117,7 @@ function google_civic_information_country_districts($level, $limit, $update) {
 function google_civic_information_state_districts($level, $limit, $update) {
 
   //Set variables
-  $addressesDistricted = $addressesWithErrors = 0;
+  $addressesDistricted = $addressesWithNoDistrict = $addressesWithErrors = 0;
 
   //API Key
   $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
@@ -118,7 +132,7 @@ function google_civic_information_state_districts($level, $limit, $update) {
 
   while ($contactAddresses->fetch()) {
 
-    $streetAddress = $city = $state = $districts = '';
+    $streetAddress = $city = $stateProvinceAbbrev = $districts = $gotDistrict = '';
     
     //Assemble the API URL
     $streetAddress = rawurlencode($contactAddresses->street_address);
@@ -133,8 +147,11 @@ function google_civic_information_state_districts($level, $limit, $update) {
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
       electoral_district_address_errors($districts, $contactAddresses->id);
+      continue;
+    }
+
     //Process divisions
-    } else {
+    if (array_key_exists('divisions', $districts)) {
       $countryDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
@@ -148,14 +165,23 @@ function google_civic_information_state_districts($level, $limit, $update) {
             $chamber = 'lower';
           }
           $divisionDistrict = $divisionParts[1];
+          electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, NULL, $chamber, $divisionDistrict);
+          $gotDistrict = TRUE;
         }
-        electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, NULL, $chamber, $divisionDistrict);
       }
+    }
+    if ($gotDistrict) {
       $addressesDistricted++;
+    } else {
+      $addressesWithNoDistrict++;
+      electoral_district_districtless_address($contactAddresses->id, $level);
     }
   }
 
   $edDistrictReturn = "$addressesDistricted addresses districted.";
+  if ($addressesWithNoDistrict > 0) {
+    $edDistrictReturn .= " Districts not found for $addressesWithNoDistrict addresses.";
+  }
   if ($addressesWithErrors > 0) {
     $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
   }
@@ -384,9 +410,22 @@ function electoral_district_address_errors($districts, $addressId) {
   //Retain the error, so we can filter out the address on future runs until it's corrected
   $address_error_create = civicrm_api3('CustomValue', 'create', [
     'entity_id' => $addressId,
-    'custom_electoral_status:Error Code' => $districts['error']['code'],
-    'custom_electoral_status:Error Reason' => $districts['error']['errors'][0]['reason'],
-    'custom_electoral_status:Error Message' => $districts['error']['message'],
+    'custom_electoral_status:Error Code' => substr($districts['error']['code'], 0, 11),
+    'custom_electoral_status:Error Reason' => substr($districts['error']['errors'][0]['reason'], 0, 255),
+    'custom_electoral_status:Error Message' => substr($districts['error']['message'], 0, 255),
+  ]);
+}
+
+/*
+ * Helper function to record when no district is returned for an address
+ */
+function electoral_district_districtless_address($addressId, $level) {
+  //Record an error, so we can filter out the address on future runs until it's corrected
+  $address_error_create = civicrm_api3('CustomValue', 'create', [
+    'entity_id' => $addressId,
+    'custom_electoral_status:Error Code' => -999,
+    'custom_electoral_status:Error Reason' => 'No district found',
+    'custom_electoral_status:Error Message' => "Level: $level",
   ]);
 }
 
