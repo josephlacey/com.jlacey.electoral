@@ -19,6 +19,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   );
 
   function buildQuickForm() {
+    CRM_Core_Session::singleton()->pushUserContext(CRM_Utils_System::url('civicrm/admin/setting/electoral', 'reset=1'));
 
     $this->add('text', 'googleCivicInformationAPIKey', ts('Google Civic Information API Key'), NULL);
     $this->add('text', 'proPublicaCongressAPIKey', ts('ProPublica Congress API Key'), NULL);
