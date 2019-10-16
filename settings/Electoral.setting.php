@@ -15,6 +15,7 @@ return array(
     'is_contact' => 0,
     'description' => 'Google Civic API Key',
     'help_text' => 'Add your registered Google Civic Information API Key for Open Civic Data API calls',
+    'html_type' => 'text',
   ),
   'proPublicaCongressAPIKey' => array(
     'group_name' => 'Electoral API settings',
@@ -27,6 +28,7 @@ return array(
     'is_contact' => 0,
     'description' => 'ProPublica Congress API Key',
     'help_text' => 'Add your registered ProPublica Congress API Key for API calls',
+    'html_type' => 'text',
   ),
   'addressLocationType' => array(
     'group_name' => 'Electoral API settings',
@@ -39,6 +41,7 @@ return array(
     'is_contact' => 0,
     'description' => 'Address location for district lookup.',
     'help_text' => 'Select the address location type to use when looking up a contact\'s districts.',
+    'html_type' => 'select',
   ),
   'includedStatesProvinces' => array(
     'group_name' => 'Electoral API settings',
@@ -51,6 +54,7 @@ return array(
     'is_contact' => 0,
     'description' => 'States and Provinces included in API calls',
     'help_text' => 'Add states and provinces to include in API scheduled jobs',
+    'html_type' => 'multiselect',
   ),
   'includedCounties' => array(
     'group_name' => 'Electoral API settings',
@@ -63,6 +67,7 @@ return array(
     'is_contact' => 0,
     'description' => 'Counties included in API calls',
     'help_text' => 'Add counties to include in API scheduled jobs',
+    'html_type' => 'multiselect',
   ),
   'includedCities' => array(
     'group_name' => 'Electoral API settings',
@@ -75,6 +80,7 @@ return array(
     'is_contact' => 0,
     'description' => 'Cities included in API calls',
     'help_text' => 'Add cities, comma separated, to include in API scheduled jobs',
+    'html_type' => 'text',
   ),
 );
 

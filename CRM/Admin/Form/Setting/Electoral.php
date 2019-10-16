@@ -19,16 +19,17 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   );
 
   function buildQuickForm() {
+    CRM_Core_Session::singleton()->pushUserContext(CRM_Utils_System::url('civicrm/admin/setting/electoral', 'reset=1'));
 
     $this->add('text', 'googleCivicInformationAPIKey', ts('Google Civic Information API Key'), NULL);
     $this->add('text', 'proPublicaCongressAPIKey', ts('ProPublica Congress API Key'), NULL);
 		$this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
 		$this->_location_types = array('Primary') + $this->_location_types;
-    $this->add('select', 'addressLocationType', ts('Address location for district lookup.'), 
+    $this->add('select', 'addressLocationType', ts('Address location for district lookup.'),
       $this->_location_types, FALSE, array('class' => 'crm-select2')
     );
     $this->add('select', 'includedStatesProvinces', ts('States included in API calls'),
-      CRM_Core_PseudoConstant::stateProvince(), FALSE, array('multiple' => 'multiple', 'class' => 'crm-select2')
+      CRM_Core_PseudoConstant::stateProvince(FALSE, TRUE), FALSE, array('multiple' => 'multiple', 'class' => 'crm-select2')
     );
     $this->addChainSelect('includedCounties', array('control_field' => 'includedStatesProvinces', 'data-callback' => 'civicrm/ajax/jqCounty', 'label' => "Counties included in the API calls", 'data-empty-prompt' => 'Choose state first', 'data-none-prompt' => '- N/A -', 'multiple' => TRUE, 'required' => FALSE, 'placeholder' => '- none -'));
     $this->add('text', 'includedCities', ts('Cities included in API Calls'), NULL);
@@ -42,7 +43,19 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
     // export form elements
     $this->assign('elementNames', $this->getRenderableElementNames());
-    parent::buildQuickForm();
+
+    $this->addButtons([
+      [
+        'type' => 'next',
+        'name' => ts('Save'),
+        'isDefault' => TRUE,
+      ],
+      [
+        'type' => 'cancel',
+        'name' => ts('Cancel'),
+      ],
+    ]);
+
   }
 
   /**
