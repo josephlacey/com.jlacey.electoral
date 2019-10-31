@@ -84,7 +84,21 @@ function google_civic_information_country_districts($level, $limit, $update) {
           $divisionParts = explode(':', str_replace($countryDivision, '', $divisionKey));
           $divisionDistrict = $divisionParts[1];
         }
-        electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, NULL, NULL, $divisionDistrict);
+
+        if (!empty($division['officeIndices'])) {
+          foreach ($division['officeIndices'] as $officeIndex) {
+            if (in_array('legislatorUpperBody', $districts['offices'][$officeIndex]['roles'])) {
+              $chamber = 'upper';
+            }
+            else {
+              $chamber = 'lower';
+            }
+            electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, NULL, $chamber, $divisionDistrict);
+          }
+        }
+        else {
+          electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, NULL, NULL, $divisionDistrict);
+        }
       }
       $addressesDistricted++;
     }
