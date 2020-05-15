@@ -3,7 +3,7 @@
 require_once 'electoral.civix.php';
 
 /**
- * Implementation of hook_civicrm_config
+ * Implements hook_civicrm_config().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
@@ -12,9 +12,7 @@ function electoral_civicrm_config(&$config) {
 }
 
 /**
- * Implementation of hook_civicrm_xmlMenu
- *
- * @param $files array(string)
+ * Implements hook_civicrm_xmlMenu().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
  */
@@ -23,9 +21,8 @@ function electoral_civicrm_xmlMenu(&$files) {
 }
 
 /**
- * Implementation of hook_civicrm_navigationMenu
+ * Implements hook_civicrm_navigationMenu().
  *
- * @param $params array
  */
 function electoral_civicrm_navigationMenu(&$params) {
   $path = "Administer/System Settings";
@@ -43,30 +40,30 @@ function electoral_civicrm_navigationMenu(&$params) {
 }
 
 /**
- * Implementation of hook_civicrm_install
+ * Implements hook_civicrm_install().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
 function electoral_civicrm_install() {
 
-  $demTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Democrat",]);
+  $demTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Democrat"]);
   if ($demTagExists == 0) {
-    $demTag = civicrm_api3('Tag', 'create', ['name' => "Democrat",]);
+    $demTag = civicrm_api3('Tag', 'create', ['name' => "Democrat"]);
   }
-  $repTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Republican",]);
+  $repTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Republican"]);
   if ($repTagExists == 0) {
-    $repTag = civicrm_api3('Tag', 'create', ['name' => "Republican",]);
+    $repTag = civicrm_api3('Tag', 'create', ['name' => "Republican"]);
   }
-  $indTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Independent",]);
+  $indTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Independent"]);
   if ($indTagExists == 0) {
-    $indTag = civicrm_api3('Tag', 'create', ['name' => "Independent",]);
+    $indTag = civicrm_api3('Tag', 'create', ['name' => "Independent"]);
   }
 
   _electoral_civix_civicrm_install();
 }
 
 /**
- * Implementation of hook_civicrm_uninstall
+ * Implements hook_civicrm_uninstall().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
@@ -75,7 +72,7 @@ function electoral_civicrm_uninstall() {
 }
 
 /**
- * Implementation of hook_civicrm_enable
+ * Implements hook_civicrm_enable().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
@@ -84,7 +81,7 @@ function electoral_civicrm_enable() {
 }
 
 /**
- * Implementation of hook_civicrm_disable
+ * Implements hook_civicrm_disable().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
  */
@@ -93,13 +90,7 @@ function electoral_civicrm_disable() {
 }
 
 /**
- * Implementation of hook_civicrm_upgrade
- *
- * @param $op string, the type of operation being performed; 'check' or 'enqueue'
- * @param $queue CRM_Queue_Queue, (for 'enqueue') the modifiable list of pending up upgrade tasks
- *
- * @return mixed  based on op. for 'check', returns array(boolean) (TRUE if upgrades are pending)
- *                for 'enqueue', returns void
+ * Implements hook_civicrm_upgrade().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
  */
@@ -108,7 +99,7 @@ function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
 }
 
 /**
- * Implementation of hook_civicrm_managed
+ * Implements hook_civicrm_managed().
  *
  * Generate a list of entities to create/deactivate/delete when this module
  * is installed, disabled, uninstalled.
@@ -240,7 +231,7 @@ function electoral_civicrm_managed(&$entities) {
 }
 
 /**
- * Implementation of hook_civicrm_caseTypes
+ * Implements hook_civicrm_caseTypes().
  *
  * Generate a list of case-types
  *
@@ -253,7 +244,7 @@ function electoral_civicrm_caseTypes(&$caseTypes) {
 }
 
 /**
- * Implementation of hook_civicrm_alterSettingsFolders
+ * Implements hook_civicrm_alterSettingsFolders().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
  */
