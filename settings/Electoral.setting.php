@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /*
  * Settings metadata file
@@ -83,5 +83,3 @@ return array(
     'html_type' => 'text',
   ),
 );
-
-?>

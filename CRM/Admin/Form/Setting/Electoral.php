@@ -18,13 +18,13 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     'includedCities' => 'Electoral API settings',
   );
 
-  function buildQuickForm() {
+  public function buildQuickForm() {
     CRM_Core_Session::singleton()->pushUserContext(CRM_Utils_System::url('civicrm/admin/setting/electoral', 'reset=1'));
 
     $this->add('text', 'googleCivicInformationAPIKey', ts('Google Civic Information API Key'), NULL);
     $this->add('text', 'proPublicaCongressAPIKey', ts('ProPublica Congress API Key'), NULL);
-		$this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
-		$this->_location_types = array('Primary') + $this->_location_types;
+    $this->_location_types = CRM_Core_PseudoConstant::get('CRM_Core_DAO_Address', 'location_type_id');
+    $this->_location_types = array('Primary') + $this->_location_types;
     $this->add('select', 'addressLocationType', ts('Address location for district lookup.'),
       $this->_location_types, FALSE, array('class' => 'crm-select2')
     );
@@ -63,7 +63,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
    *
    * @return array (string)
    */
-  function getRenderableElementNames() {
+  private function getRenderableElementNames() {
     // The _elements list includes some items which should not be
     // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
     // items don't have labels.  We'll identify renderable by filtering on
@@ -78,4 +78,5 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     }
     return $elementNames;
   }
+
 }
