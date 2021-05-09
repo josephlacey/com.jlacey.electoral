@@ -47,7 +47,7 @@
       <name>electoral_states_provinces</name>
       <label>States/Provinces</label>
       <data_type>StateProvince</data_type>
-      <html_type>Select State/Province</html_type>
+      <html_type>Select</html_type>
       <is_required>0</is_required>
       <is_searchable>1</is_searchable>
       <is_search_range>0</is_search_range>
